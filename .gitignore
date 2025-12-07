@@ -1,5 +1,5 @@
 /target
-/crates/anyai_ollama/target
+/Cargo.lock
 
 # MacOS file system clutter.
 ._*
