@@ -15,10 +15,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyai"
+version = "0.0.0"
+source = "git+https://github.com/astrum-chat/anyai#38fd1ddc5b083a4c3050b55f247e3cd0ee582e60"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "futures",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "anyai_ollama"
 version = "0.0.0"
 dependencies = [
- "anyai",
+ "anyai 0.0.0 (git+https://github.com/astrum-chat/anyai)",
  "anyhow",
  "anyhttp",
  "anyhttp_reqwest",

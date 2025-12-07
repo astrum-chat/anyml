@@ -2,7 +2,7 @@
 
 An API wrapper for interacting with Ollama via AnyAi.
 
-Does not enforce a specific async runtime or http library via the [anyhttp](../) crate.
+Does not enforce a specific async runtime or http library via the [anyhttp](ttps://github.com/quaero-search/anyhttp) crate.
 
 ## Example usage
 ```rs
