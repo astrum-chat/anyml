@@ -2,6 +2,8 @@
 
 An API wrapper for interacting with Ollama via AnyAi.
 
+Does not enforce a specific async runtime or http library via the [anyhttp](../) crate.
+
 ## Example usage
 ```rs
 use anyai::{ChatOptions, ChatProvider};
@@ -9,7 +11,9 @@ use anyai_ollama::OllamaProvider;
 
 let ollama = OllamaProvider::new(
     "http://localhost:11434",
-    reqwest::Client::new()
+    // We need to put the client in a wrapper
+    // as a workaround to rust's orphan rule.
+    ReqwestClientWrapper::new(reqwest::Client::new()),
 );
 
 let messages = &["Write me a short poem!".into()];

@@ -33,7 +33,7 @@ impl<C: HttpClient> ChatProvider for OllamaProvider<C> {
 
         let response = self
             .client
-            .send(request)
+            .execute(request)
             .await
             .map_err(|this| ChatError::ResponseFetchFailed(this))?;
 

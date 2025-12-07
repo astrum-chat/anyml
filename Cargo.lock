@@ -21,6 +21,7 @@ dependencies = [
  "anyai",
  "anyhow",
  "anyhttp",
+ "anyhttp_reqwest",
  "async-trait",
  "futures",
  "http",
@@ -37,16 +38,29 @@ checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
 
 [[package]]
 name = "anyhttp"
-version = "0.1.0"
+version = "0.0.0"
+source = "git+https://github.com/quaero-search/anyhttp#54a95206c9df2e855e5898ceda43c310ec064fec"
 dependencies = [
  "anyhow",
  "async-trait",
  "bytes",
  "futures",
  "http",
- "http-body-util",
+ "url",
+]
+
+[[package]]
+name = "anyhttp_reqwest"
+version = "0.0.0"
+source = "git+https://github.com/quaero-search/anyhttp#54a95206c9df2e855e5898ceda43c310ec064fec"
+dependencies = [
+ "anyhow",
+ "anyhttp",
+ "async-trait",
+ "bytes",
+ "futures",
+ "http",
  "reqwest",
- "tokio",
  "url",
 ]
 

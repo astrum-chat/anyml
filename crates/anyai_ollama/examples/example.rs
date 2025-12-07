@@ -1,15 +1,26 @@
 use anyai::{ChatOptions, ChatProvider, ChatResponse};
 use anyai_ollama::OllamaProvider;
+use anyhttp_reqwest::ReqwestClientWrapper;
 
 const MODEL: &'static str = "qwen2.5:1.5b";
 const STREAM_RESPONSE: bool = true;
 
+struct Config {
+    chat_provider: Box<dyn ChatProvider>,
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let provider: Box<dyn ChatProvider> = Box::new(OllamaProvider::new(
-        "http://localhost:11434",
-        reqwest::Client::new(),
-    ));
+    let config = Config {
+        chat_provider: Box::new(OllamaProvider::new(
+            "http://localhost:11434",
+            // We need to put the client in a wrapper
+            // as a workaround to rust's orphan rule.
+            ReqwestClientWrapper::new(reqwest::Client::new()),
+        )),
+    };
+
+    let provider = &config.chat_provider;
 
     let messages = &["Write me a short poem!".into()];
     let options = ChatOptions::new(&MODEL).messages(messages);

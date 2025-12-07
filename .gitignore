@@ -1,4 +1,5 @@
 /target
+/crates/anyai_ollama/target
 
 # MacOS file system clutter.
 ._*
