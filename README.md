@@ -8,6 +8,11 @@ anyml_ollama](crates/anyml_anthropic)
 [anyml_ollama](crates/anyml_ollama)
 anyml_ollama](crates/anyml_openai)
 
+## Installation
+```
+anyml = { git = "https://github.com/astrum-chat/anyml", features = ["anthropic", "ollama", "openai"] }
+```
+
 ## Example
 
 ```rs

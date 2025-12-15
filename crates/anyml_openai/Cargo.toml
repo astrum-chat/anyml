@@ -4,9 +4,9 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-# anyml_core = { git = "https://github.com/astrum-chat/anyml" }
+anyml_core = { git = "https://github.com/astrum-chat/anyml" }
 # local development.
-anyml_core = { path = "../anyml_core" }
+# anyml_core = { path = "../anyml_core" }
 
 async-trait = "0.1.89"
 anyhttp = { git = "https://github.com/quaero-search/anyhttp", features = ["stream"] }
