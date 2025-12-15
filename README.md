@@ -4,11 +4,9 @@ Dyn-compatible traits which provide a unified API for asynchronously interacting
 
 Crates for different providers can be found here:
 
-[anyml_anthropic](crates/anyml_anthropic)
-
-[anyml_ollama](crates/anyml_ollama)
-
-[anyml_openai](crates/anyml_openai)
+- [anyml_anthropic](crates/anyml_anthropic)
+- [anyml_ollama](crates/anyml_ollama)
+- [anyml_openai](crates/anyml_openai)
 
 ## Installation
 ```toml
