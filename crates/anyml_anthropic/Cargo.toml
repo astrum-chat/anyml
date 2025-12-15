@@ -1,21 +1,27 @@
 [package]
-name = "anyai_ollama"
+name = "anyml_anthropic"
 version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-anyai = { git = "https://github.com/astrum-chat/anyai" }
+# anyml_core = { git = "https://github.com/astrum-chat/anyml" }
 # local development.
-# anyai = { path = "../../" }
+anyml_core = { path = "../anyml_core" }
 
 async-trait = "0.1.89"
 anyhttp = { git = "https://github.com/quaero-search/anyhttp", features = [ "stream" ] }
 http = "1.3.1"
+serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 futures = "0.3.31"
 anyhow = "1.0.100"
+bytes = "1.11.0"
+secrecy = "0.10.3"
+thiserror = "2.0.17"
+itertools = "0.14.0"
 
 [dev-dependencies]
 reqwest = { version = "0.12.24", features = ["stream"] }
 tokio = { version = "1.48.0", features = ["full"] }
 anyhttp_reqwest = { git = "https://github.com/quaero-search/anyhttp", features = [ "stream" ] }
+dotenvy = "0.15"

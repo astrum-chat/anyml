@@ -1,6 +1,6 @@
-use anyai::{ChatOptions, ChatProvider, ChatResponse};
-use anyai_ollama::OllamaProvider;
 use anyhttp_reqwest::ReqwestClientWrapper;
+use anyml_core::{ChatOptions, ChatProvider, ChatResponse};
+use anyml_ollama::OllamaProvider;
 
 const MODEL: &'static str = "qwen2.5:1.5b";
 const STREAM_RESPONSE: bool = true;
@@ -13,7 +13,6 @@ struct Config {
 async fn main() -> anyhow::Result<()> {
     let config = Config {
         chat_provider: Box::new(OllamaProvider::new(
-            "http://localhost:11434",
             // We need to put the client in a wrapper
             // as a workaround to rust's orphan rule.
             ReqwestClientWrapper::new(reqwest::Client::new()),
@@ -43,7 +42,7 @@ async fn stream_response(mut response: ChatResponse<'_>) {
 
     let mut out = stdout();
     while let Some(Ok(chunk)) = response.next().await {
-        out.write_all(chunk.as_bytes()).await.unwrap();
+        out.write_all(chunk.content.as_bytes()).await.unwrap();
         out.flush().await.unwrap();
     }
 }
@@ -54,6 +53,7 @@ async fn collect_response(response: ChatResponse<'_>) -> String {
 
     response
         .filter_map(async |this| this.ok())
-        .collect::<String>()
+        .map(|this| this.content)
+        .collect()
         .await
 }
