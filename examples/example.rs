@@ -13,7 +13,7 @@ async fn main() {
 
     let options = ChatOptions::new("claude-3-haiku-20240307");
 
-    let mut response = config.chat_provider.chat(&options).await.unwrap();
+    let response = config.chat_provider.chat(&options).await.unwrap();
 
     let mut out = stdout();
     while let Some(Ok(chunk)) = response.next().await {

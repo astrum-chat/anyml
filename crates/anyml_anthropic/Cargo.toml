@@ -2,6 +2,9 @@
 name = "anyml_anthropic"
 version = "0.0.0"
 edition = "2024"
+description = "Light-weight machine learning crate."
+license = "MIT"
+homepage = "https://github.com/astrum-chat/anyml"
 
 [dependencies]
 anyml_core = { git = "https://github.com/astrum-chat/anyml" }
