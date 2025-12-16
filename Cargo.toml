@@ -13,9 +13,9 @@ anyml_ollama = { path = "./crates/anyml_ollama", optional = true }
 anyml_openai = { path = "./crates/anyml_openai", optional = true }
 
 [dev-dependencies]
-anyml = { git = "https://github.com/astrum-chat/anyml", features = ["anthropic"] }
+# anyml = { git = "https://github.com/astrum-chat/anyml", features = ["anthropic"] }
 # Local development.
-# anyml = { path = ".", features = ["anthropic"] }
+anyml = { path = ".", features = ["anthropic"] }
 
 tokio = { version = "1.48.0", features = ["full"] }
 reqwest = { version = "0.12.24", features = ["stream"] }

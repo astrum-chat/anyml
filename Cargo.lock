@@ -42,9 +42,9 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "anyhttp_reqwest",
- "anyml 0.0.0 (git+https://github.com/astrum-chat/anyml)",
- "anyml_anthropic 0.0.0",
- "anyml_core 0.0.0",
+ "anyml",
+ "anyml_anthropic",
+ "anyml_core",
  "anyml_ollama",
  "anyml_openai",
  "dotenvy",
@@ -54,22 +54,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "anyml"
-version = "0.0.0"
-source = "git+https://github.com/astrum-chat/anyml#16d8000d4f9781b40215ed84f5b3a875d096766c"
-dependencies = [
- "anyml_anthropic 0.0.0 (git+https://github.com/astrum-chat/anyml)",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
-]
-
-[[package]]
 name = "anyml_anthropic"
 version = "0.0.0"
 dependencies = [
  "anyhow",
  "anyhttp",
  "anyhttp_reqwest",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_core",
  "async-trait",
  "bytes",
  "dotenvy",
@@ -85,40 +76,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "anyml_anthropic"
-version = "0.0.0"
-source = "git+https://github.com/astrum-chat/anyml#16d8000d4f9781b40215ed84f5b3a875d096766c"
-dependencies = [
- "anyhow",
- "anyhttp",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
- "async-trait",
- "bytes",
- "futures",
- "http",
- "itertools",
- "secrecy",
- "serde",
- "serde_json",
- "thiserror",
-]
-
-[[package]]
 name = "anyml_core"
 version = "0.0.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "futures",
- "serde",
- "serde_json",
- "thiserror",
-]
-
-[[package]]
-name = "anyml_core"
-version = "0.0.0"
-source = "git+https://github.com/astrum-chat/anyml#16d8000d4f9781b40215ed84f5b3a875d096766c"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -135,7 +94,7 @@ dependencies = [
  "anyhow",
  "anyhttp",
  "anyhttp_reqwest",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_core",
  "async-trait",
  "bytes",
  "futures",
@@ -153,7 +112,7 @@ dependencies = [
  "anyhow",
  "anyhttp",
  "anyhttp_reqwest",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_core",
  "async-trait",
  "bytes",
  "dotenvy",

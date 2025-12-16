@@ -37,7 +37,6 @@ async fn main() -> anyhow::Result<()> {
 
 /// Streams the response to tokio::io::stdout.
 async fn stream_response(mut response: ChatResponse<'_>) {
-    use futures::StreamExt;
     use tokio::io::{AsyncWriteExt, stdout};
 
     let mut out = stdout();
@@ -48,12 +47,6 @@ async fn stream_response(mut response: ChatResponse<'_>) {
 }
 
 /// Collects all chunks in the response stream to a string.
-async fn collect_response(response: ChatResponse<'_>) -> String {
-    use futures::StreamExt;
-
-    response
-        .filter_map(async |this| this.ok())
-        .map(|this| this.content)
-        .collect()
-        .await
+async fn collect_response(mut response: ChatResponse<'_>) -> String {
+    response.aggregate_lossy().await.unwrap_or_default().content
 }

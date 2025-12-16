@@ -2,9 +2,7 @@ use std::borrow::Cow;
 
 use anyhow::anyhow;
 use anyhttp::HttpClient;
-use anyml_core::{
-    ChatError, ChatOptions, ChatProvider, ChatResponse, ChatStreamError, ChunkResponse,
-};
+use anyml_core::{ChatChunk, ChatError, ChatOptions, ChatProvider, ChatResponse, ChatStreamError};
 use bytes::Bytes;
 use futures::StreamExt;
 use http::Request;
@@ -89,14 +87,14 @@ impl<C: HttpClient> ChatProvider for OpenAiProvider<C> {
 
         let stream = response.bytes_stream();
 
-        Ok(Box::pin(stream.filter_map(|chunk| async {
+        Ok(ChatResponse::new(stream.filter_map(|chunk| async {
             let chunk = match chunk {
                 Ok(chunk) => chunk,
                 Err(err) => return Some(Err(ChatStreamError::ParseError(err))),
             };
             let chunk = String::from_utf8_lossy(&chunk);
 
-            let mut parsed_chunk = ChunkResponse {
+            let mut parsed_chunk = ChatChunk {
                 content: String::new(),
             };
 

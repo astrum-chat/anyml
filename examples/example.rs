@@ -1,6 +1,5 @@
 use anyhttp_reqwest::ReqwestClientWrapper;
 use anyml::{AnthropicProvider, ChatOptions, ChatProvider};
-use futures::StreamExt;
 use tokio::io::{AsyncWriteExt, stdout};
 
 struct Config {
@@ -11,9 +10,10 @@ struct Config {
 async fn main() {
     let config = init_config().unwrap();
 
-    let options = ChatOptions::new("claude-3-haiku-20240307").messages(&["Hello chatbot".into()]);
+    let messages = &["Write me a short poem!".into()];
+    let options = ChatOptions::new("claude-3-haiku-20240307").messages(messages);
 
-    let response = config.chat_provider.chat(&options).await.unwrap();
+    let mut response = config.chat_provider.chat(&options).await.unwrap();
 
     let mut out = stdout();
     while let Some(Ok(chunk)) = response.next().await {

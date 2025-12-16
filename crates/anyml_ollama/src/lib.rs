@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use anyhow::anyhow;
 use anyhttp::HttpClient;
 use anyml_core::{
-    ChatError, ChatOptions, ChatProvider, ChatResponse, ChatStreamError, ChunkResponse, Message,
+    ChatChunk, ChatError, ChatOptions, ChatProvider, ChatResponse, ChatStreamError, Message,
 };
 use bytes::Bytes;
 use futures::StreamExt;
@@ -61,13 +61,13 @@ impl<C: HttpClient> ChatProvider for OllamaProvider<C> {
 
         let stream = response.bytes_stream();
 
-        Ok(Box::pin(stream.map(|chunk| {
+        Ok(ChatResponse::new(stream.map(|chunk| {
             let chunk = chunk.map_err(ChatStreamError::ParseError)?;
 
             let response: OllamaChunkResponse = serde_json::from_slice(&chunk)
                 .map_err(|e| ChatStreamError::ParseError(anyhow::Error::new(e)))?;
 
-            Ok(ChunkResponse {
+            Ok(ChatChunk {
                 content: response.message.content,
             })
         })))

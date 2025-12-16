@@ -1,13 +1,93 @@
-use futures::Stream;
+use futures::{Stream, StreamExt};
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
-use std::{collections::HashMap, pin::Pin, usize};
+use std::{
+    collections::HashMap,
+    ops::{Deref, DerefMut},
+    pin::Pin,
+    usize,
+};
 use thiserror::Error;
 
 use crate::Message;
 
-pub type ChatResponse<'a> =
-    Pin<Box<dyn Stream<Item = Result<ChunkResponse, ChatStreamError>> + Send + 'a>>;
+pub struct ChatResponse<'a>(
+    Pin<Box<dyn Stream<Item = Result<ChatChunk, ChatStreamError>> + Send + 'a>>,
+);
+
+impl<'a> ChatResponse<'a> {
+    pub fn new(stream: impl Stream<Item = Result<ChatChunk, ChatStreamError>> + Send + 'a) -> Self {
+        Self(Box::pin(stream))
+    }
+
+    pub async fn next(&mut self) -> Option<Result<ChatChunk, ChatStreamError>> {
+        self.0.next().await
+    }
+
+    // Iterates through all of the remaining chunks in the stream and aggregates them into one chunk.
+    // If any error occurs then it will be returned instead.
+    pub async fn aggregate(&mut self) -> Option<Result<ChatChunk, ChatStreamError>> {
+        let mut aggregated_chunks = match self.next().await? {
+            Ok(chunk) => chunk,
+            Err(err) => return Some(Err(err)),
+        };
+
+        while let Some(chunk) = self.next().await {
+            let chunk = match chunk {
+                Ok(chunk) => chunk,
+                Err(err) => return Some(Err(err)),
+            };
+
+            aggregated_chunks.aggregate_with(&chunk);
+        }
+
+        Some(Ok(aggregated_chunks))
+    }
+
+    // Iterates through all of the remaining chunks in the stream and aggregates them into one chunk.
+    // Any errors will be ignored.
+    pub async fn aggregate_lossy(&mut self) -> Option<ChatChunk> {
+        let mut aggregated_chunks = ChatChunk::default();
+
+        while let Some(chunk) = self.next().await {
+            let chunk = match chunk {
+                Ok(chunk) => chunk,
+                Err(_err) => continue,
+            };
+
+            aggregated_chunks.aggregate_with(&chunk);
+        }
+
+        Some(aggregated_chunks)
+    }
+}
+
+impl<'a> Stream for ChatResponse<'a> {
+    type Item = Result<ChatChunk, ChatStreamError>;
+
+    fn poll_next(
+        mut self: Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Option<Self::Item>> {
+        self.0.poll_next_unpin(cx)
+    }
+}
+
+impl<'a> Deref for ChatResponse<'a> {
+    type Target = Pin<Box<dyn Stream<Item = Result<ChatChunk, ChatStreamError>> + Send + 'a>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<'a> DerefMut for ChatResponse<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<'a> Unpin for ChatResponse<'a> {}
 
 #[async_trait::async_trait]
 pub trait ChatProvider: Send + Sync {
@@ -80,9 +160,15 @@ enum Messages<'a> {
     Serialized(Box<RawValue>),
 }
 
-#[derive(Deserialize, Debug)]
-pub struct ChunkResponse {
+#[derive(Deserialize, Debug, Default)]
+pub struct ChatChunk {
     pub content: String,
+}
+
+impl ChatChunk {
+    pub fn aggregate_with(&mut self, chunk: &ChatChunk) {
+        self.content.push_str(&chunk.content);
+    }
 }
 
 #[derive(Debug, Error)]

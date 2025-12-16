@@ -1,8 +1,6 @@
 use anyhow::anyhow;
 use anyhttp::HttpClient;
-use anyml_core::{
-    ChatError, ChatOptions, ChatProvider, ChatResponse, ChatStreamError, ChunkResponse,
-};
+use anyml_core::{ChatChunk, ChatError, ChatOptions, ChatProvider, ChatResponse, ChatStreamError};
 use bytes::Bytes;
 use futures::StreamExt;
 use http::Request;
@@ -72,7 +70,7 @@ impl<C: HttpClient> ChatProvider for AnthropicProvider<C> {
 
         let stream = response.bytes_stream();
 
-        Ok(Box::pin(
+        Ok(ChatResponse::new(
             stream
                 .scan(String::new(), |buffer, chunk| {
                     let chunk = match chunk.map_err(|this| ChatStreamError::ParseError(this)) {
@@ -105,7 +103,7 @@ impl<C: HttpClient> ChatProvider for AnthropicProvider<C> {
                     futures::future::ready(Some(if content.len() == 0 {
                         None
                     } else {
-                        Some(Ok(ChunkResponse { content }))
+                        Some(Ok(ChatChunk { content }))
                     }))
                 })
                 .filter_map(async |this| this),
