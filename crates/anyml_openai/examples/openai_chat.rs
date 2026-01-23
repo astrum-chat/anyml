@@ -1,9 +1,10 @@
-use anyhttp_reqwest::ReqwestClientWrapper;
-use anyml_core::{ChatOptions, ChatProvider, ChatResponse};
-use anyml_ollama::OllamaProvider;
+use std::env;
 
-const MODEL: &'static str = "qwen2.5:1.5b";
-const STREAM_RESPONSE: bool = true;
+use anyml_core::providers::chat::{ChatOptions, ChatProvider, ChatResponse};
+use anyml_openai::OpenAiProvider;
+
+const MODEL: &str = "deepseek/deepseek-chat-v3-0324";
+const STREAM_RESPONSE: bool = false;
 
 struct Config {
     chat_provider: Box<dyn ChatProvider>,
@@ -11,17 +12,16 @@ struct Config {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    dotenvy::from_filename(".env.test").ok();
+    let api_key = env::var("OPENROUTER_API_KEY").expect("API_KEY not set");
+
     let config = Config {
-        chat_provider: Box::new(OllamaProvider::new(
-            // We need to put the client in a wrapper
-            // as a workaround to rust's orphan rule.
-            ReqwestClientWrapper::new(reqwest::Client::new()),
-        )),
+        chat_provider: Box::new(OpenAiProvider::open_router(reqwest::Client::new(), api_key)),
     };
 
     let provider = &config.chat_provider;
 
-    let messages = &["Write me a short poem!".into()];
+    let messages = &["Write me a short poem".into()];
     let options = ChatOptions::new(&MODEL).messages(messages);
 
     let response = provider.chat(&options).await.map_err(anyhow::Error::new)?;

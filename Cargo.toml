@@ -19,7 +19,7 @@ anyml = { path = ".", features = ["anthropic"] }
 
 tokio = { version = "1.48.0", features = ["full"] }
 reqwest = { version = "0.12.24", features = ["stream"] }
-anyhttp_reqwest = { git = "https://github.com/quaero-search/anyhttp", features = [ "stream" ] }
+anyhttp = { git = "https://github.com/quaero-search/anyhttp", features = ["stream", "reqwest"] }
 dotenvy = "0.15"
 anyhow = "1.0.100"
 futures = "0.3.31"

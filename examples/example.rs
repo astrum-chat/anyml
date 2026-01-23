@@ -1,5 +1,5 @@
-use anyhttp_reqwest::ReqwestClientWrapper;
-use anyml::{AnthropicProvider, ChatOptions, ChatProvider};
+use anyml::AnthropicProvider;
+use anyml_core::providers::chat::{ChatOptions, ChatProvider};
 use tokio::io::{AsyncWriteExt, stdout};
 
 struct Config {
@@ -27,8 +27,7 @@ fn init_config() -> anyhow::Result<Config> {
 
     let api_key = std::env::var("ANTHROPIC_API_KEY")?;
 
-    let client = ReqwestClientWrapper::new(reqwest::Client::new());
-    let anthropic = AnthropicProvider::new(client, api_key);
+    let anthropic = AnthropicProvider::new(reqwest::Client::new(), api_key);
 
     Ok(Config {
         chat_provider: Box::new(anthropic),

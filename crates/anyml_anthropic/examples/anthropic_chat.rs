@@ -1,10 +1,9 @@
 use std::env;
 
-use anyhttp_reqwest::ReqwestClientWrapper;
 use anyml_anthropic::AnthropicProvider;
-use anyml_core::{ChatOptions, ChatProvider, ChatResponse};
+use anyml_core::providers::chat::{ChatOptions, ChatProvider, ChatResponse};
 
-const MODEL: &'static str = "claude-3-haiku-20240307";
+const MODEL: &str = "claude-3-haiku-20240307";
 const STREAM_RESPONSE: bool = true;
 
 struct Config {
@@ -21,12 +20,7 @@ async fn chat() -> anyhow::Result<()> {
     let api_key = env::var("ANTHROPIC_API_KEY").expect("API_KEY not set");
 
     let config = Config {
-        chat_provider: Box::new(AnthropicProvider::new(
-            // We need to put the client in a wrapper
-            // as a workaround to rust's orphan rule.
-            ReqwestClientWrapper::new(reqwest::Client::new()),
-            api_key,
-        )),
+        chat_provider: Box::new(AnthropicProvider::new(reqwest::Client::new(), api_key)),
     };
 
     let provider = &config.chat_provider;

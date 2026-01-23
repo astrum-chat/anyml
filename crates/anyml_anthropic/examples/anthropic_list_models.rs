@@ -1,0 +1,21 @@
+use std::env;
+
+use anyml_anthropic::AnthropicProvider;
+use anyml_core::providers::list_models::ListModelsProvider;
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    dotenvy::from_filename(".env.test").ok();
+    let api_key = env::var("ANTHROPIC_API_KEY").expect("ANTHROPIC_API_KEY not set");
+
+    let provider = AnthropicProvider::new(reqwest::Client::new(), api_key);
+
+    let models = provider.list_models().await?;
+
+    println!("Available models:");
+    for model in models {
+        println!("  - {}", model.id);
+    }
+
+    Ok(())
+}

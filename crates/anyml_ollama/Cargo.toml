@@ -23,4 +23,4 @@ bytes = "1.11.0"
 [dev-dependencies]
 reqwest = { version = "0.12.24", features = ["stream"] }
 tokio = { version = "1.48.0", features = ["full"] }
-anyhttp_reqwest = { git = "https://github.com/quaero-search/anyhttp", features = [ "stream" ] }
+anyhttp = { git = "https://github.com/quaero-search/anyhttp", features = ["mock", "stream", "reqwest"] }
