@@ -12,7 +12,7 @@ homepage = "https://github.com/astrum-chat/anyml"
 anyml_core = { path = "../anyml_core" }
 
 async-trait = "0.1.89"
-anyhttp = { git = "https://github.com/quaero-search/anyhttp", features = [ "stream" ] }
+anyhttp = { version = "0.0.0", features = ["stream"] }
 http = "1.3.1"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
@@ -26,5 +26,5 @@ itertools = "0.14.0"
 [dev-dependencies]
 reqwest = { version = "0.12.24", features = ["stream"] }
 tokio = { version = "1.48.0", features = ["full"] }
-anyhttp = { git = "https://github.com/quaero-search/anyhttp", features = ["mock", "stream", "reqwest"] }
+anyhttp = { version = "0.0.0", features = ["mock", "stream", "reqwest"] }
 dotenvy = "0.15"

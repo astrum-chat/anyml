@@ -60,3 +60,81 @@ impl<C: HttpClient> ChatProvider for OllamaProvider<C> {
 struct OllamaChunkResponse {
     message: Message,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhttp::mock::{MockHttpClient, MockResponse};
+    use http::StatusCode;
+
+    #[tokio::test]
+    async fn test_chat_success() {
+        let client = MockHttpClient::new().with_response(
+            MockResponse::new(StatusCode::OK)
+                .body(r#"{"message":{"role":"assistant","content":"Hello!"}}"#),
+        );
+
+        let provider = OllamaProvider::new(client);
+        let messages = &["Hi".into()];
+        let options = ChatOptions::new("llama2").messages(messages);
+
+        let mut response = provider.chat(&options).await.unwrap();
+        let chunk = response.next().await.unwrap().unwrap();
+
+        assert_eq!(chunk.content, "Hello!");
+    }
+
+    #[tokio::test]
+    async fn test_chat_http_error() {
+        let client = MockHttpClient::new().with_response(
+            MockResponse::new(StatusCode::INTERNAL_SERVER_ERROR).body("server error"),
+        );
+
+        let provider = OllamaProvider::new(client);
+        let messages = &["Hi".into()];
+        let options = ChatOptions::new("llama2").messages(messages);
+
+        let result = provider.chat(&options).await;
+
+        assert!(matches!(result, Err(ChatError::RequestError(_))));
+    }
+
+    #[tokio::test]
+    async fn test_chat_request_url() {
+        let client = MockHttpClient::new().with_response(
+            MockResponse::new(StatusCode::OK)
+                .body(r#"{"message":{"role":"assistant","content":"Hi"}}"#),
+        );
+
+        let provider = OllamaProvider::new(client.clone());
+        let messages = &["Hi".into()];
+        let options = ChatOptions::new("llama2").messages(messages);
+
+        provider.chat(&options).await.unwrap();
+
+        let request = client.last_request().unwrap();
+        assert_eq!(request.uri(), "http://localhost:11434/api/chat");
+    }
+
+    #[tokio::test]
+    async fn test_chat_aggregate() {
+        let client = MockHttpClient::new()
+            .with_response(
+                MockResponse::new(StatusCode::OK)
+                    .body(r#"{"message":{"role":"assistant","content":"Hello"}}"#),
+            )
+            .with_response(
+                MockResponse::new(StatusCode::OK)
+                    .body(r#"{"message":{"role":"assistant","content":" world"}}"#),
+            );
+
+        let provider = OllamaProvider::new(client);
+        let messages = &["Hi".into()];
+        let options = ChatOptions::new("llama2").messages(messages);
+
+        let mut response = provider.chat(&options).await.unwrap();
+        let aggregated = response.aggregate().await.unwrap().unwrap();
+
+        assert_eq!(aggregated.content, "Hello");
+    }
+}

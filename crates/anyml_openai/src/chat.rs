@@ -105,3 +105,82 @@ struct OpenAiChunkResponseChoice {
 struct OpenAiChunkResponseDelta {
     content: String,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhttp::mock::{MockHttpClient, MockResponse};
+    use http::StatusCode;
+
+    #[tokio::test]
+    async fn test_chat_success() {
+        let client = MockHttpClient::new().with_response(
+            MockResponse::new(StatusCode::OK)
+                .body("data:{\"choices\":[{\"delta\":{\"content\":\"Hello!\"}}]}\n\n"),
+        );
+
+        let provider = OpenAiProvider::new(client, "test-api-key");
+        let messages = &["Hi".into()];
+        let options = ChatOptions::new("gpt-4").messages(messages);
+
+        let mut response = provider.chat(&options).await.unwrap();
+        let chunk = response.next().await.unwrap().unwrap();
+
+        assert_eq!(chunk.content, "Hello!");
+    }
+
+    #[tokio::test]
+    async fn test_chat_http_error() {
+        let client = MockHttpClient::new()
+            .with_response(MockResponse::new(StatusCode::UNAUTHORIZED).body("invalid api key"));
+
+        let provider = OpenAiProvider::new(client, "bad-key");
+        let messages = &["Hi".into()];
+        let options = ChatOptions::new("gpt-4").messages(messages);
+
+        let result = provider.chat(&options).await;
+
+        assert!(matches!(result, Err(ChatError::RequestError(_))));
+    }
+
+    #[tokio::test]
+    async fn test_chat_request_headers() {
+        let client = MockHttpClient::new().with_response(
+            MockResponse::new(StatusCode::OK)
+                .body("data:{\"choices\":[{\"delta\":{\"content\":\"Hi\"}}]}\n\n"),
+        );
+
+        let provider = OpenAiProvider::new(client.clone(), "my-secret-key");
+        let messages = &["Hi".into()];
+        let options = ChatOptions::new("gpt-4").messages(messages);
+
+        provider.chat(&options).await.unwrap();
+
+        let request = client.last_request().unwrap();
+        assert_eq!(request.uri(), "https://api.openai.com/v1/chat/completions");
+        assert_eq!(
+            request.headers().get("Authorization").unwrap(),
+            "Bearer my-secret-key"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_chat_open_router() {
+        let client = MockHttpClient::new().with_response(
+            MockResponse::new(StatusCode::OK)
+                .body("data:{\"choices\":[{\"delta\":{\"content\":\"Hi\"}}]}\n\n"),
+        );
+
+        let provider = OpenAiProvider::open_router(client.clone(), "router-key");
+        let messages = &["Hi".into()];
+        let options = ChatOptions::new("gpt-4").messages(messages);
+
+        provider.chat(&options).await.unwrap();
+
+        let request = client.last_request().unwrap();
+        assert_eq!(
+            request.uri(),
+            "https://openrouter.ai/api/v1/chat/completions"
+        );
+    }
+}

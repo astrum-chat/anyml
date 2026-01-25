@@ -168,3 +168,81 @@ enum ParseEventError {
         reason: anyhow::Error,
     },
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhttp::mock::{MockHttpClient, MockResponse};
+    use http::StatusCode;
+
+    #[tokio::test]
+    async fn test_chat_success() {
+        let client = MockHttpClient::new().with_response(
+            MockResponse::new(StatusCode::OK)
+                .body("event: content_block_delta\ndata: {\"delta\":{\"text\":\"Hello!\"}}\n\n"),
+        );
+
+        let provider = AnthropicProvider::new(client, "test-api-key");
+        let messages = &["Hi".into()];
+        let options = ChatOptions::new("claude-3-haiku").messages(messages);
+
+        let mut response = provider.chat(&options).await.unwrap();
+        let chunk = response.next().await.unwrap().unwrap();
+
+        assert_eq!(chunk.content, "Hello!");
+    }
+
+    #[tokio::test]
+    async fn test_chat_http_error() {
+        let client = MockHttpClient::new()
+            .with_response(MockResponse::new(StatusCode::UNAUTHORIZED).body("invalid api key"));
+
+        let provider = AnthropicProvider::new(client, "bad-key");
+        let messages = &["Hi".into()];
+        let options = ChatOptions::new("claude-3-haiku").messages(messages);
+
+        let result = provider.chat(&options).await;
+
+        assert!(matches!(result, Err(ChatError::RequestError(_))));
+    }
+
+    #[tokio::test]
+    async fn test_chat_request_headers() {
+        let client = MockHttpClient::new().with_response(
+            MockResponse::new(StatusCode::OK)
+                .body("event: content_block_delta\ndata: {\"delta\":{\"text\":\"Hi\"}}\n\n"),
+        );
+
+        let provider = AnthropicProvider::new(client.clone(), "my-secret-key");
+        let messages = &["Hi".into()];
+        let options = ChatOptions::new("claude-3-haiku").messages(messages);
+
+        provider.chat(&options).await.unwrap();
+
+        let request = client.last_request().unwrap();
+        assert_eq!(request.uri(), "https://api.anthropic.com/v1/messages");
+        assert_eq!(request.headers().get("x-api-key").unwrap(), "my-secret-key");
+        assert_eq!(
+            request.headers().get("anthropic-version").unwrap(),
+            "2023-06-01"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_chat_ignores_non_content_events() {
+        let client = MockHttpClient::new().with_response(MockResponse::new(StatusCode::OK).body(
+            "event: message_start\ndata: {\"type\":\"message_start\"}\n\n\
+                 event: content_block_delta\ndata: {\"delta\":{\"text\":\"Hello\"}}\n\n\
+                 event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n",
+        ));
+
+        let provider = AnthropicProvider::new(client, "test-api-key");
+        let messages = &["Hi".into()];
+        let options = ChatOptions::new("claude-3-haiku").messages(messages);
+
+        let mut response = provider.chat(&options).await.unwrap();
+        let chunk = response.next().await.unwrap().unwrap();
+
+        assert_eq!(chunk.content, "Hello");
+    }
+}
