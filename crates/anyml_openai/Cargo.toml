@@ -25,5 +25,5 @@ smallvec = { version = "1.15.1", features = ["serde"] }
 [dev-dependencies]
 reqwest = { version = "0.12.24", features = ["stream"] }
 tokio = { version = "1.48.0", features = ["full"] }
-anyhttp = { version = "0.0.0", features = ["mock", "stream", "reqwest"] }
+anyhttp = { version = "0.0.0", features = ["test-support", "stream", "reqwest"] }
 dotenvy = "0.15"
