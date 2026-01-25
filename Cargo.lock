@@ -28,10 +28,10 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "anyhttp",
- "anyml_anthropic 0.0.0 (git+https://github.com/astrum-chat/anyml)",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
- "anyml_ollama 0.0.0 (git+https://github.com/astrum-chat/anyml)",
- "anyml_openai 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_anthropic",
+ "anyml_core 0.0.0",
+ "anyml_ollama",
+ "anyml_openai",
  "dotenvy",
  "reqwest",
  "tokio",
@@ -56,25 +56,6 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tokio",
-]
-
-[[package]]
-name = "anyml_anthropic"
-version = "0.0.0"
-source = "git+https://github.com/astrum-chat/anyml#58965c07a9837d6318c00d7d6c8267b325baec3b"
-dependencies = [
- "anyhow",
- "anyhttp",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
- "async-trait",
- "bytes",
- "futures",
- "http",
- "itertools",
- "secrecy",
- "serde",
- "serde_json",
- "thiserror",
 ]
 
 [[package]]
@@ -108,7 +89,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "anyhttp",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_core 0.0.0",
  "async-trait",
  "bytes",
  "futures",
@@ -117,22 +98,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
-]
-
-[[package]]
-name = "anyml_ollama"
-version = "0.0.0"
-source = "git+https://github.com/astrum-chat/anyml#58965c07a9837d6318c00d7d6c8267b325baec3b"
-dependencies = [
- "anyhow",
- "anyhttp",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
- "async-trait",
- "bytes",
- "futures",
- "http",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -153,24 +118,6 @@ dependencies = [
  "serde_json",
  "smallvec",
  "tokio",
-]
-
-[[package]]
-name = "anyml_openai"
-version = "0.0.0"
-source = "git+https://github.com/astrum-chat/anyml#58965c07a9837d6318c00d7d6c8267b325baec3b"
-dependencies = [
- "anyhow",
- "anyhttp",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
- "async-trait",
- "bytes",
- "futures",
- "http",
- "secrecy",
- "serde",
- "serde_json",
- "smallvec",
 ]
 
 [[package]]

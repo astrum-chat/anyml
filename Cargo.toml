@@ -7,15 +7,15 @@ license = "MIT"
 homepage = "https://github.com/astrum-chat/anyml"
 
 [dependencies]
+anyml_core = { git = "https://github.com/astrum-chat/anyml" }
+anyml_anthropic = { git = "https://github.com/astrum-chat/anyml", optional = true }
+anyml_ollama = { git = "https://github.com/astrum-chat/anyml", optional = true }
+anyml_openai = { git = "https://github.com/astrum-chat/anyml", optional = true }
 # Local development.
 # anyml_core = { path = "./crates/anyml_core" }
 # anyml_anthropic = { path = "./crates/anyml_anthropic", optional = true }
 # anyml_ollama = { path = "./crates/anyml_ollama", optional = true }
 # anyml_openai = { path = "./crates/anyml_openai", optional = true }
-anyml_core = { git = "https://github.com/astrum-chat/anyml" }
-anyml_anthropic = { git = "https://github.com/astrum-chat/anyml", optional = true }
-anyml_ollama = { git = "https://github.com/astrum-chat/anyml", optional = true }
-anyml_openai = { git = "https://github.com/astrum-chat/anyml", optional = true }
 
 [[example]]
 name = "example"
