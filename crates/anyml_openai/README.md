@@ -19,7 +19,7 @@ let openai = OpenAiProvider::new(
     api_key
 );
 
-let messages = &["Write me a short poem!".into()];
+let messages =  &[Message::user("Write me a short poem!")];
 let options = ChatOptions::new("gpt-5-nano").messages(messages);
 
 let response = openai.chat(&options).await.unwrap();

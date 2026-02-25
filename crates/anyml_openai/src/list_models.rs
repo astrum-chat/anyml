@@ -50,7 +50,11 @@ impl<C: HttpClient> ListModelsProvider for OpenAiProvider<C> {
         let models = openai_response
             .data
             .into_iter()
-            .map(|m| Model { id: m.id })
+            .map(|m| Model {
+                id: m.id,
+                parameters: None,
+                quantization: None,
+            })
             .collect();
 
         Ok(models)

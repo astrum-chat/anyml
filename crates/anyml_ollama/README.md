@@ -15,7 +15,7 @@ let ollama = OllamaProvider::new(
     ReqwestClientWrapper::new(reqwest::Client::new()),
 );
 
-let messages = &["Write me a short poem!".into()];
+let messages =  &[Message::user("Write me a short poem!")];
 let options = ChatOptions::new("claude-3-haiku-20240307").messages(messages);
 
 let response = ollama.chat(&options).await.unwrap();

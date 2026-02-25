@@ -25,7 +25,7 @@ use tokio::io::{AsyncWriteExt, stdout};
 async fn main() {
     let config = init_config().unwrap();
 
-    let messages = &["Write me a short poem!".into()];
+    let messages =  &[Message::user("Write me a short poem!")];
     let options = ChatOptions::new("claude-3-haiku-20240307").messages(messages);
 
     let mut response = config.chat_provider.chat(&options).await.unwrap();

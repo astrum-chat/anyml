@@ -19,7 +19,7 @@ let anthropic = AnthropicProvider::new(
     api_key
 );
 
-let messages = &["Write me a short poem!".into()];
+let messages =  &[Message::user("Write me a short poem!")];
 let options = ChatOptions::new("claude-3-haiku-20240307").messages(messages);
 
 let response = anthropic.chat(&options).await.unwrap();

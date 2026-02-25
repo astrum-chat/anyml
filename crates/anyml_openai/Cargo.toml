@@ -7,9 +7,7 @@ license = "MIT"
 homepage = "https://github.com/astrum-chat/anyml"
 
 [dependencies]
-anyml_core = { git = "https://github.com/astrum-chat/anyml" }
-# local development.
-# anyml_core = { path = "../anyml_core" }
+anyml_core.workspace = true
 
 async-trait = "0.1.89"
 anyhttp = { version = "0.0.0", features = ["stream"] }

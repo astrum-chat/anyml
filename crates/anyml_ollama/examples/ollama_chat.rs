@@ -1,4 +1,7 @@
-use anyml_core::providers::chat::{ChatOptions, ChatProvider, ChatResponse};
+use anyml_core::{
+    Message,
+    providers::chat::{ChatOptions, ChatProvider, ChatResponse},
+};
 use anyml_ollama::OllamaProvider;
 
 const MODEL: &str = "qwen2.5:1.5b";
@@ -16,7 +19,7 @@ async fn main() -> anyhow::Result<()> {
 
     let provider = &config.chat_provider;
 
-    let messages = &["Write me a short poem!".into()];
+    let messages = &[Message::user("Write me a short poem!")];
     let options = ChatOptions::new(&MODEL).messages(messages);
 
     let response = provider.chat(&options).await.map_err(anyhow::Error::new)?;

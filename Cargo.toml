@@ -7,15 +7,10 @@ license = "MIT"
 homepage = "https://github.com/astrum-chat/anyml"
 
 [dependencies]
-anyml_core = { git = "https://github.com/astrum-chat/anyml" }
-anyml_anthropic = { git = "https://github.com/astrum-chat/anyml", optional = true }
-anyml_ollama = { git = "https://github.com/astrum-chat/anyml", optional = true }
-anyml_openai = { git = "https://github.com/astrum-chat/anyml", optional = true }
-# Local development.
-# anyml_core = { path = "./crates/anyml_core" }
-# anyml_anthropic = { path = "./crates/anyml_anthropic", optional = true }
-# anyml_ollama = { path = "./crates/anyml_ollama", optional = true }
-# anyml_openai = { path = "./crates/anyml_openai", optional = true }
+anyml_core.workspace = true
+anyml_anthropic = { workspace = true, optional = true }
+anyml_ollama = { workspace = true, optional = true }
+anyml_openai = { workspace = true, optional = true }
 
 [[example]]
 name = "example"
@@ -42,6 +37,18 @@ members = [
     "crates/anyml_openai",
     "crates/anyml_core"
 ]
+
+[workspace.dependencies]
+# Remote:
+anyml_core = { git = "https://github.com/astrum-chat/anyml" }
+anyml_anthropic = { git = "https://github.com/astrum-chat/anyml" }
+anyml_ollama = { git = "https://github.com/astrum-chat/anyml" }
+anyml_openai = { git = "https://github.com/astrum-chat/anyml" }
+# Local:
+# anyml_core = { path = "./crates/anyml_core" }
+# anyml_anthropic = { path = "./crates/anyml_anthropic" }
+# anyml_ollama = { path = "./crates/anyml_ollama" }
+# anyml_openai = { path = "./crates/anyml_openai" }
 
 [patch.crates-io]
 anyhttp = { git = "https://github.com/quaero-search/anyhttp" }

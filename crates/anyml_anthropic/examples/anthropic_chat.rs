@@ -1,7 +1,10 @@
 use std::env;
 
 use anyml_anthropic::AnthropicProvider;
-use anyml_core::providers::chat::{ChatOptions, ChatProvider, ChatResponse};
+use anyml_core::{
+    Message,
+    providers::chat::{ChatOptions, ChatProvider, ChatResponse},
+};
 
 const MODEL: &str = "claude-3-haiku-20240307";
 const STREAM_RESPONSE: bool = true;
@@ -25,7 +28,7 @@ async fn chat() -> anyhow::Result<()> {
 
     let provider = &config.chat_provider;
 
-    let messages = &["Write me a short poem!".into()];
+    let messages = &[Message::user("Write me a short poem!")];
     let options = ChatOptions::new(&MODEL).messages(messages);
 
     let response = provider.chat(&options).await.map_err(anyhow::Error::new)?;

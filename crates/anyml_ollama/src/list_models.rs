@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use anyhttp::HttpClient;
 use anyml_core::{
-    models::Model,
+    models::{Model, ModelParams, ModelQuant},
     providers::list_models::{ListModelsError, ListModelsProvider},
 };
 use bytes::Bytes;
@@ -45,7 +45,21 @@ impl<C: HttpClient> ListModelsProvider for OllamaProvider<C> {
         let models = ollama_response
             .models
             .into_iter()
-            .map(|m| Model { id: m.name })
+            .map(|m| {
+                let (parameters, quantization) = m
+                    .details
+                    .map(|d| {
+                        let params = d.parameter_size.map(|p| ModelParams::new(&p));
+                        let quant = d.quantization_level.map(|q| ModelQuant::new(&q));
+                        (params, quant)
+                    })
+                    .unwrap_or((None, None));
+                Model {
+                    id: m.name,
+                    parameters,
+                    quantization,
+                }
+            })
             .collect();
 
         Ok(models)
@@ -60,6 +74,13 @@ struct OllamaTagsResponse {
 #[derive(Deserialize)]
 struct OllamaModel {
     name: String,
+    details: Option<OllamaModelDetails>,
+}
+
+#[derive(Deserialize)]
+struct OllamaModelDetails {
+    parameter_size: Option<String>,
+    quantization_level: Option<String>,
 }
 
 #[cfg(test)]
