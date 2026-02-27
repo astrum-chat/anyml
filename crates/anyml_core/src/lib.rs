@@ -1,8 +1,9 @@
+pub mod json;
 pub mod models;
 pub mod providers;
 
-pub use models::{Message, MessageRole, Model};
+pub use models::{Message, MessageRole, Model, ThinkingBudget, ThinkingModes};
 pub use providers::{
-    ChatChunk, ChatError, ChatOptions, ChatProvider, ChatResponse, ChatStreamError,
-    ListModelsError, ListModelsProvider,
+    AggregatedChat, ChatChunk, ChatError, ChatOptions, ChatProvider, ChatResponse,
+    ChatStreamError, ListModelsError, ListModelsProvider, Thinking,
 };

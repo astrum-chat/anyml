@@ -28,10 +28,10 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "anyhttp",
- "anyml_anthropic 0.0.0 (git+https://github.com/astrum-chat/anyml)",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
- "anyml_ollama 0.0.0 (git+https://github.com/astrum-chat/anyml)",
- "anyml_openai 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_anthropic",
+ "anyml_core",
+ "anyml_ollama",
+ "anyml_openai",
  "dotenvy",
  "reqwest",
  "tokio",
@@ -43,38 +43,21 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "anyhttp",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_core",
+ "anyml_macros",
  "async-trait",
  "bytes",
  "dotenvy",
  "futures",
  "http",
  "itertools",
+ "phf",
  "reqwest",
  "secrecy",
  "serde",
  "serde_json",
  "thiserror",
  "tokio",
-]
-
-[[package]]
-name = "anyml_anthropic"
-version = "0.0.0"
-source = "git+https://github.com/astrum-chat/anyml#b848c9bd3a163d51792910e883af6c3e1f812ee0"
-dependencies = [
- "anyhow",
- "anyhttp",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
- "async-trait",
- "bytes",
- "futures",
- "http",
- "itertools",
- "secrecy",
- "serde",
- "serde_json",
- "thiserror",
 ]
 
 [[package]]
@@ -91,16 +74,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "anyml_core"
+name = "anyml_macros"
 version = "0.0.0"
-source = "git+https://github.com/astrum-chat/anyml#b848c9bd3a163d51792910e883af6c3e1f812ee0"
 dependencies = [
- "anyhow",
- "async-trait",
- "futures",
- "serde",
- "serde_json",
- "thiserror",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -109,7 +88,8 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "anyhttp",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_core",
+ "anyml_macros",
  "async-trait",
  "bytes",
  "futures",
@@ -121,57 +101,25 @@ dependencies = [
 ]
 
 [[package]]
-name = "anyml_ollama"
-version = "0.0.0"
-source = "git+https://github.com/astrum-chat/anyml#b848c9bd3a163d51792910e883af6c3e1f812ee0"
-dependencies = [
- "anyhow",
- "anyhttp",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
- "async-trait",
- "bytes",
- "futures",
- "http",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "anyml_openai"
 version = "0.0.0"
 dependencies = [
  "anyhow",
  "anyhttp",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_core",
+ "anyml_macros",
  "async-trait",
  "bytes",
  "dotenvy",
  "futures",
  "http",
+ "phf",
  "reqwest",
  "secrecy",
  "serde",
  "serde_json",
  "smallvec",
  "tokio",
-]
-
-[[package]]
-name = "anyml_openai"
-version = "0.0.0"
-source = "git+https://github.com/astrum-chat/anyml#b848c9bd3a163d51792910e883af6c3e1f812ee0"
-dependencies = [
- "anyhow",
- "anyhttp",
- "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
- "async-trait",
- "bytes",
- "futures",
- "http",
- "secrecy",
- "serde",
- "serde_json",
- "smallvec",
 ]
 
 [[package]]

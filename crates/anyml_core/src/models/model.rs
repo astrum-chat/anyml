@@ -20,6 +20,19 @@ pub struct Model {
     pub id: String,
     pub parameters: Option<ModelParams>,
     pub quantization: Option<ModelQuant>,
+    pub thinking: Option<ThinkingModes>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ThinkingModes<M = Vec<String>> {
+    pub modes: M,
+    pub budget: Option<ThinkingBudget>,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct ThinkingBudget {
+    pub min: usize,
+    pub max: usize,
 }
 
 impl Model {

@@ -1,8 +1,9 @@
 use anyhow::anyhow;
 use anyhttp::HttpClient;
 use anyml_core::providers::chat::{
-    ChatChunk, ChatError, ChatOptions, ChatProvider, ChatResponse, ChatStreamError,
+    ChatChunk, ChatError, ChatOptions, ChatProvider, ChatResponse, ChatStreamError, Thinking,
 };
+use anyml_macros::json_string;
 use bytes::Bytes;
 use futures::StreamExt;
 use http::Request;
@@ -15,22 +16,37 @@ use crate::OpenAiProvider;
 #[async_trait::async_trait]
 impl<C: HttpClient> ChatProvider for OpenAiProvider<C> {
     async fn chat(&self, options: &ChatOptions<'_>) -> Result<ChatResponse, ChatError> {
-        let options = options.clone().extra("reasoning", {
-            let mut map = serde_json::Map::new();
-            map.insert("effort".into(), "none".into());
-            map
-        });
+        let messages_json = options.messages.to_json();
 
-        let body = serde_json::to_string(&options)
-            .map(String::into_bytes)
-            .map_err(|this| ChatError::RequestBuildFailed(anyhow::Error::new(this)))?;
+        let body: String = match &options.thinking {
+            Some(Thinking::Effort(effort)) => json_string! {
+                "model": options.model,
+                "messages": @raw messages_json,
+                "stream": options.stream,
+                "max_completion_tokens": options.max_tokens,
+                "reasoning_effort": effort
+            },
+            Some(_) => json_string! {
+                "model": options.model,
+                "messages": @raw messages_json,
+                "stream": options.stream,
+                "max_completion_tokens": options.max_tokens,
+                "reasoning_effort": "medium"
+            },
+            None => json_string! {
+                "model": options.model,
+                "messages": @raw messages_json,
+                "stream": options.stream,
+                "max_tokens": options.max_tokens
+            },
+        };
 
         let request = Request::post(format!("{}/v1/chat/completions", self.url))
             .header(
                 "Authorization",
                 format!("Bearer {}", self.api_key.expose_secret()),
             )
-            .body(body)
+            .body(body.into_bytes())
             .map_err(|this| ChatError::RequestBuildFailed(anyhow::Error::new(this)))?;
 
         let response = self
@@ -52,43 +68,49 @@ impl<C: HttpClient> ChatProvider for OpenAiProvider<C> {
 
         let stream = response.bytes_stream();
 
-        Ok(ChatResponse::new(stream.filter_map(|chunk| async {
-            let chunk = match chunk {
-                Ok(chunk) => chunk,
-                Err(err) => return Some(Err(ChatStreamError::ParseError(err))),
+        Ok(ChatResponse::new(
+            stream
+                .map(parse_sse_chunk)
+                .flat_map(futures::stream::iter),
+        ))
+    }
+}
+
+fn parse_sse_chunk(
+    chunk: Result<bytes::Bytes, anyhow::Error>,
+) -> Vec<Result<ChatChunk, ChatStreamError>> {
+    let chunk = match chunk {
+        Ok(chunk) => chunk,
+        Err(err) => return vec![Err(ChatStreamError::ParseError(err))],
+    };
+    let chunk = String::from_utf8_lossy(&chunk);
+
+    let mut results = Vec::new();
+
+    for event in chunk.split("\n\n") {
+        if let Some(event_body) = event.strip_prefix("data:") {
+            let parsed_event = match serde_json::from_str::<OpenAiChunkResponse>(event_body) {
+                Ok(parsed_event) => parsed_event,
+                Err(err) => {
+                    results.push(Err(ChatStreamError::ParseError(anyhow::Error::new(err))));
+                    continue;
+                }
             };
-            let chunk = String::from_utf8_lossy(&chunk);
 
-            let mut parsed_chunk = ChatChunk {
-                content: String::new(),
-            };
-
-            for event in chunk.split("\n\n") {
-                if let Some(event_body) = event.strip_prefix("data:") {
-                    let parsed_event =
-                        match serde_json::from_str::<OpenAiChunkResponse>(&event_body) {
-                            Ok(parsed_event) => parsed_event,
-                            Err(err) => {
-                                return Some(Err(ChatStreamError::ParseError(anyhow::Error::new(
-                                    err,
-                                ))));
-                            }
-                        };
-
-                    if let Some(content) = parsed_event
-                        .choices
-                        .iter()
-                        .next()
-                        .map(|this| &this.delta.content)
-                    {
-                        parsed_chunk.content += &content;
+            if let Some(choice) = parsed_event.choices.first() {
+                if let Some(ref reasoning) = choice.delta.reasoning_content {
+                    if !reasoning.is_empty() {
+                        results.push(Ok(ChatChunk::Thinking(reasoning.clone())));
                     }
                 }
+                if !choice.delta.content.is_empty() {
+                    results.push(Ok(ChatChunk::Content(choice.delta.content.clone())));
+                }
             }
-
-            Some(Ok(parsed_chunk))
-        })))
+        }
     }
+
+    results
 }
 
 #[derive(Deserialize)]
@@ -103,7 +125,10 @@ struct OpenAiChunkResponseChoice {
 
 #[derive(Deserialize)]
 struct OpenAiChunkResponseDelta {
+    #[serde(default)]
     content: String,
+    #[serde(default)]
+    reasoning_content: Option<String>,
 }
 
 #[cfg(test)]
@@ -126,7 +151,7 @@ mod tests {
         let mut response = provider.chat(&options).await.unwrap();
         let chunk = response.next().await.unwrap().unwrap();
 
-        assert_eq!(chunk.content, "Hello!");
+        assert!(matches!(chunk, ChatChunk::Content(ref s) if s == "Hello!"));
     }
 
     #[tokio::test]
@@ -182,5 +207,25 @@ mod tests {
             request.uri(),
             "https://openrouter.ai/api/v1/chat/completions"
         );
+    }
+
+    #[tokio::test]
+    async fn test_chat_with_reasoning_content() {
+        let client = MockHttpClient::new().with_response(
+            MockResponse::new(StatusCode::OK)
+                .body("data:{\"choices\":[{\"delta\":{\"content\":\"\",\"reasoning_content\":\"Let me think...\"}}]}\n\ndata:{\"choices\":[{\"delta\":{\"content\":\"Hello!\",\"reasoning_content\":null}}]}\n\n"),
+        );
+
+        let provider = OpenAiProvider::new(client, "test-api-key");
+        let messages = &["Hi".into()];
+        let options = ChatOptions::new("o3-mini")
+            .messages(messages)
+            .thinking(Thinking::effort("high"));
+
+        let mut response = provider.chat(&options).await.unwrap();
+        let result = response.aggregate().await.unwrap();
+
+        assert_eq!(result.content, "Hello!");
+        assert_eq!(result.thinking.as_deref(), Some("Let me think..."));
     }
 }

@@ -1,15 +1,32 @@
 use anyhow::anyhow;
 use anyhttp::HttpClient;
 use anyml_core::{
-    models::Model,
+    models::{Model, ThinkingModes},
     providers::list_models::{ListModelsError, ListModelsProvider},
 };
 use bytes::Bytes;
 use http::Request;
+use phf::phf_map;
 use secrecy::ExposeSecret;
 use serde::Deserialize;
 
 use crate::OpenAiProvider;
+
+type StaticThinkingModes = ThinkingModes<&'static [&'static str]>;
+
+static THINKING_MODELS: phf::Map<&'static str, StaticThinkingModes> = phf_map! {
+    "o1" => StaticThinkingModes { modes: &["low", "medium", "high"], budget: None },
+    "o1-mini" => StaticThinkingModes { modes: &["low", "medium", "high"], budget: None },
+    "o1-preview" => StaticThinkingModes { modes: &["low", "medium", "high"], budget: None },
+    "o3" => StaticThinkingModes { modes: &["low", "medium", "high"], budget: None },
+    "o3-mini" => StaticThinkingModes { modes: &["low", "medium", "high"], budget: None },
+    "o3-pro" => StaticThinkingModes { modes: &["low", "medium", "high"], budget: None },
+    "o4-mini" => StaticThinkingModes { modes: &["low", "medium", "high"], budget: None },
+    "gpt-5" => StaticThinkingModes { modes: &["minimal", "low", "medium", "high"], budget: None },
+    "gpt-5-mini" => StaticThinkingModes { modes: &["minimal", "low", "medium", "high"], budget: None },
+    "gpt-5.1" => StaticThinkingModes { modes: &["none", "low", "medium", "high"], budget: None },
+    "gpt-5.2" => StaticThinkingModes { modes: &["none", "low", "medium", "high", "xhigh"], budget: None },
+};
 
 #[async_trait::async_trait]
 impl<C: HttpClient> ListModelsProvider for OpenAiProvider<C> {
@@ -50,10 +67,19 @@ impl<C: HttpClient> ListModelsProvider for OpenAiProvider<C> {
         let models = openai_response
             .data
             .into_iter()
-            .map(|m| Model {
-                id: m.id,
-                parameters: None,
-                quantization: None,
+            .map(|m| {
+                let thinking = THINKING_MODELS
+                    .get(m.id.as_str())
+                    .map(|s| ThinkingModes {
+                        modes: s.modes.iter().map(|s| (*s).into()).collect(),
+                        budget: s.budget,
+                    });
+                Model {
+                    id: m.id,
+                    parameters: None,
+                    quantization: None,
+                    thinking,
+                }
             })
             .collect();
 

@@ -1,6 +1,6 @@
 use anyml_core::{
     Message,
-    providers::chat::{ChatOptions, ChatProvider, ChatResponse},
+    providers::chat::{ChatChunk, ChatOptions, ChatProvider, ChatResponse},
 };
 use anyml_ollama::OllamaProvider;
 
@@ -39,12 +39,14 @@ async fn stream_response(mut response: ChatResponse<'_>) {
 
     let mut out = stdout();
     while let Some(Ok(chunk)) = response.next().await {
-        out.write_all(chunk.content.as_bytes()).await.unwrap();
-        out.flush().await.unwrap();
+        if let ChatChunk::Content(text) = chunk {
+            out.write_all(text.as_bytes()).await.unwrap();
+            out.flush().await.unwrap();
+        }
     }
 }
 
 /// Collects all chunks in the response stream to a string.
 async fn collect_response(mut response: ChatResponse<'_>) -> String {
-    response.aggregate_lossy().await.unwrap_or_default().content
+    response.aggregate_lossy().await.content
 }

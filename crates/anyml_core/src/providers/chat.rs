@@ -1,11 +1,8 @@
 use futures::{Stream, StreamExt};
-use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 use std::{
-    collections::HashMap,
     ops::{Deref, DerefMut},
     pin::Pin,
-    usize,
 };
 use thiserror::Error;
 
@@ -16,14 +13,13 @@ pub trait ChatProvider: Send + Sync {
     async fn chat(&self, options: &ChatOptions<'_>) -> Result<ChatResponse, ChatError>;
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct ChatOptions<'a> {
-    model: &'a str,
-    messages: Messages<'a>,
-    stream: bool,
-    max_tokens: usize,
-    #[serde(flatten)]
-    extras: HashMap<String, serde_json::Value>,
+    pub model: &'a str,
+    pub messages: Messages<'a>,
+    pub stream: bool,
+    pub max_tokens: usize,
+    pub thinking: Option<Thinking>,
 }
 
 impl<'a> ChatOptions<'a> {
@@ -33,7 +29,7 @@ impl<'a> ChatOptions<'a> {
             messages: Messages::Raw(&[]),
             stream: true,
             max_tokens: 4096,
-            extras: HashMap::new(),
+            thinking: None,
         }
     }
 
@@ -68,18 +64,56 @@ impl<'a> ChatOptions<'a> {
         self
     }
 
-    /// Adds an extra non-standard field that is bespoke to a specific provider.
-    pub fn extra(mut self, key: impl Into<String>, value: impl Into<serde_json::Value>) -> Self {
-        self.extras.insert(key.into(), value.into());
+    /// Enables thinking/reasoning for models that support it.
+    pub fn thinking(mut self, thinking: Thinking) -> Self {
+        self.thinking = Some(thinking);
         self
     }
 }
 
-#[derive(Serialize, Clone, Debug)]
-#[serde(untagged)]
-enum Messages<'a> {
+#[derive(Clone, Debug)]
+pub enum Messages<'a> {
     Raw(&'a [Message]),
     Serialized(Box<RawValue>),
+}
+
+impl Messages<'_> {
+    /// Returns messages as a JSON string for embedding in request bodies.
+    pub fn to_json(&self) -> String {
+        match self {
+            Messages::Raw(msgs) => serde_json::to_string(msgs).unwrap(),
+            Messages::Serialized(raw) => raw.get().to_string(),
+        }
+    }
+}
+
+/// Configuration for enabling model thinking/reasoning.
+///
+/// Each variant carries exactly what its target provider needs.
+/// Providers handle the variants they understand and apply sensible
+/// defaults for the rest.
+#[derive(Clone, Debug)]
+pub enum Thinking {
+    /// A token budget for thinking. Used by Anthropic.
+    BudgetTokens(usize),
+    /// A named effort level (e.g. "low", "medium", "high"). Used by OpenAI.
+    Effort(String),
+    /// Simply enable thinking with no further configuration. Used by Ollama.
+    Enabled,
+}
+
+impl Thinking {
+    pub fn budget_tokens(budget: usize) -> Self {
+        Self::BudgetTokens(budget)
+    }
+
+    pub fn effort(effort: impl Into<String>) -> Self {
+        Self::Effort(effort.into())
+    }
+
+    pub fn enabled() -> Self {
+        Self::Enabled
+    }
 }
 
 pub struct ChatResponse<'a>(
@@ -95,41 +129,30 @@ impl<'a> ChatResponse<'a> {
         self.0.next().await
     }
 
-    // Iterates through all of the remaining chunks in the stream and aggregates them into one chunk.
+    // Iterates through all remaining chunks and aggregates them.
     // If any error occurs then it will be returned instead.
-    pub async fn aggregate(&mut self) -> Option<Result<ChatChunk, ChatStreamError>> {
-        let mut aggregated_chunks = match self.next().await? {
-            Ok(chunk) => chunk,
-            Err(err) => return Some(Err(err)),
-        };
+    pub async fn aggregate(&mut self) -> Result<AggregatedChat, ChatStreamError> {
+        let mut result = AggregatedChat::default();
 
         while let Some(chunk) = self.next().await {
-            let chunk = match chunk {
-                Ok(chunk) => chunk,
-                Err(err) => return Some(Err(err)),
-            };
-
-            aggregated_chunks.aggregate_with(&chunk);
+            result.push(&chunk?);
         }
 
-        Some(Ok(aggregated_chunks))
+        Ok(result)
     }
 
-    // Iterates through all of the remaining chunks in the stream and aggregates them into one chunk.
+    // Iterates through all remaining chunks and aggregates them.
     // Any errors will be ignored.
-    pub async fn aggregate_lossy(&mut self) -> Option<ChatChunk> {
-        let mut aggregated_chunks = ChatChunk::default();
+    pub async fn aggregate_lossy(&mut self) -> AggregatedChat {
+        let mut result = AggregatedChat::default();
 
         while let Some(chunk) = self.next().await {
-            let chunk = match chunk {
-                Ok(chunk) => chunk,
-                Err(_err) => continue,
-            };
-
-            aggregated_chunks.aggregate_with(&chunk);
+            if let Ok(chunk) = chunk {
+                result.push(&chunk);
+            }
         }
 
-        Some(aggregated_chunks)
+        result
     }
 }
 
@@ -160,14 +183,26 @@ impl<'a> DerefMut for ChatResponse<'a> {
 
 impl<'a> Unpin for ChatResponse<'a> {}
 
-#[derive(Deserialize, Debug, Default)]
-pub struct ChatChunk {
-    pub content: String,
+#[derive(Debug)]
+pub enum ChatChunk {
+    Content(String),
+    Thinking(String),
 }
 
-impl ChatChunk {
-    pub fn aggregate_with(&mut self, chunk: &ChatChunk) {
-        self.content.push_str(&chunk.content);
+#[derive(Debug, Default)]
+pub struct AggregatedChat {
+    pub content: String,
+    pub thinking: Option<String>,
+}
+
+impl AggregatedChat {
+    pub fn push(&mut self, chunk: &ChatChunk) {
+        match chunk {
+            ChatChunk::Content(text) => self.content.push_str(text),
+            ChatChunk::Thinking(text) => {
+                self.thinking.get_or_insert_with(String::new).push_str(text);
+            }
+        }
     }
 }
 

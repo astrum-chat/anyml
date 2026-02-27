@@ -1,15 +1,30 @@
 use anyhow::anyhow;
 use anyhttp::HttpClient;
 use anyml_core::{
-    models::Model,
+    models::{Model, ThinkingBudget, ThinkingModes},
     providers::list_models::{ListModelsError, ListModelsProvider},
 };
 use bytes::Bytes;
 use http::Request;
+use phf::phf_map;
 use secrecy::ExposeSecret;
 use serde::Deserialize;
 
 use crate::AnthropicProvider;
+
+type StaticThinkingModes = ThinkingModes<&'static [&'static str]>;
+
+static THINKING_MODELS: phf::Map<&'static str, StaticThinkingModes> = phf_map! {
+    "claude-3-7-sonnet-20250219" => StaticThinkingModes { modes: &[], budget: Some(ThinkingBudget { min: 1024, max: 128000 }) },
+    "claude-sonnet-4-20250514" => StaticThinkingModes { modes: &[], budget: Some(ThinkingBudget { min: 1024, max: 128000 }) },
+    "claude-sonnet-4-5-20250929" => StaticThinkingModes { modes: &[], budget: Some(ThinkingBudget { min: 1024, max: 128000 }) },
+    "claude-sonnet-4-6" => StaticThinkingModes { modes: &["low", "medium", "high", "max"], budget: Some(ThinkingBudget { min: 1024, max: 128000 }) },
+    "claude-opus-4-20250514" => StaticThinkingModes { modes: &[], budget: Some(ThinkingBudget { min: 1024, max: 128000 }) },
+    "claude-opus-4-1-20250805" => StaticThinkingModes { modes: &[], budget: Some(ThinkingBudget { min: 1024, max: 128000 }) },
+    "claude-opus-4-5-20251101" => StaticThinkingModes { modes: &[], budget: Some(ThinkingBudget { min: 1024, max: 128000 }) },
+    "claude-opus-4-6" => StaticThinkingModes { modes: &["low", "medium", "high", "max"], budget: None },
+    "claude-haiku-4-5-20251001" => StaticThinkingModes { modes: &[], budget: Some(ThinkingBudget { min: 1024, max: 128000 }) },
+};
 
 #[async_trait::async_trait]
 impl<C: HttpClient> ListModelsProvider for AnthropicProvider<C> {
@@ -48,10 +63,20 @@ impl<C: HttpClient> ListModelsProvider for AnthropicProvider<C> {
         let models = anthropic_response
             .data
             .into_iter()
-            .map(|m| Model {
-                id: m.id,
-                parameters: None,
-                quantization: None,
+            .map(|m| {
+                let thinking =
+                    THINKING_MODELS
+                        .get(m.id.as_str())
+                        .map(|s| ThinkingModes {
+                            modes: s.modes.iter().map(|s| (*s).into()).collect(),
+                            budget: s.budget,
+                        });
+                Model {
+                    id: m.id,
+                    parameters: None,
+                    quantization: None,
+                    thinking,
+                }
             })
             .collect();
 

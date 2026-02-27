@@ -1,4 +1,4 @@
-use anyml::{AnthropicProvider, Message};
+use anyml::{AnthropicProvider, ChatChunk, Message};
 use anyml_core::providers::chat::{ChatOptions, ChatProvider};
 use tokio::io::{AsyncWriteExt, stdout};
 
@@ -17,8 +17,10 @@ async fn main() {
 
     let mut out = stdout();
     while let Some(Ok(chunk)) = response.next().await {
-        out.write_all(chunk.content.as_bytes()).await.unwrap();
-        out.flush().await.unwrap();
+        if let ChatChunk::Content(text) = chunk {
+            out.write_all(text.as_bytes()).await.unwrap();
+            out.flush().await.unwrap();
+        }
     }
 }
 

@@ -8,6 +8,7 @@ homepage = "https://github.com/astrum-chat/anyml"
 
 [dependencies]
 anyml_core.workspace = true
+anyml_macros.workspace = true
 
 async-trait = "0.1.89"
 anyhttp = { version = "0.0.0", features = ["stream"] }
@@ -20,6 +21,7 @@ bytes = "1.11.0"
 secrecy = "0.10.3"
 thiserror = "2.0.17"
 itertools = "0.14.0"
+phf = { version = "0.13.1", features = ["macros"] }
 
 [dev-dependencies]
 reqwest = { version = "0.12.24", features = ["stream"] }

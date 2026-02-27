@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use anyhttp::HttpClient;
 use anyml_core::{
-    models::{Model, ModelParams, ModelQuant},
+    models::{Model, ModelParams, ModelQuant, ThinkingModes},
     providers::list_models::{ListModelsError, ListModelsProvider},
 };
 use bytes::Bytes;
@@ -42,27 +42,58 @@ impl<C: HttpClient> ListModelsProvider for OllamaProvider<C> {
         let ollama_response: OllamaTagsResponse = serde_json::from_slice(&body)
             .map_err(|e| ListModelsError::ParseError(anyhow::Error::new(e)))?;
 
-        let models = ollama_response
-            .models
-            .into_iter()
-            .map(|m| {
-                let (parameters, quantization) = m
-                    .details
-                    .map(|d| {
-                        let params = d.parameter_size.map(|p| ModelParams::new(&p));
-                        let quant = d.quantization_level.map(|q| ModelQuant::new(&q));
-                        (params, quant)
-                    })
-                    .unwrap_or((None, None));
-                Model {
-                    id: m.name,
-                    parameters,
-                    quantization,
-                }
-            })
-            .collect();
+        let mut models = Vec::with_capacity(ollama_response.models.len());
+        for m in ollama_response.models {
+            let (parameters, quantization) = m
+                .details
+                .map(|d| {
+                    let params = d.parameter_size.map(|p| ModelParams::new(&p));
+                    let quant = d.quantization_level.map(|q| ModelQuant::new(&q));
+                    (params, quant)
+                })
+                .unwrap_or((None, None));
+
+            let thinking = self.fetch_thinking_modes(&m.name).await;
+
+            models.push(Model {
+                id: m.name,
+                parameters,
+                quantization,
+                thinking,
+            });
+        }
 
         Ok(models)
+    }
+}
+
+impl<C: HttpClient> OllamaProvider<C> {
+    /// Calls `/api/show` for a model and returns `ThinkingModes` if the model
+    /// has the `"thinking"` capability. Returns `None` on any error or if
+    /// the capability is absent.
+    async fn fetch_thinking_modes(&self, model: &str) -> Option<ThinkingModes> {
+        let body = format!(r#"{{"model":"{}"}}"#, model);
+        let request = Request::post(format!("{}/api/show", self.url))
+            .body(body.into_bytes())
+            .ok()?;
+
+        let response = self.client.execute(request).await.ok()?;
+
+        if !response.status().is_success() {
+            return None;
+        }
+
+        let bytes = response.bytes().await.ok()?;
+        let show: OllamaShowResponse = serde_json::from_slice(&bytes).ok()?;
+
+        if show.capabilities.contains(&"thinking".to_string()) {
+            Some(ThinkingModes {
+                modes: vec!["enabled".into()],
+                budget: None,
+            })
+        } else {
+            None
+        }
     }
 }
 
@@ -83,6 +114,12 @@ struct OllamaModelDetails {
     quantization_level: Option<String>,
 }
 
+#[derive(Deserialize)]
+struct OllamaShowResponse {
+    #[serde(default)]
+    capabilities: Vec<String>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -91,17 +128,48 @@ mod tests {
 
     #[tokio::test]
     async fn test_list_models_success() {
-        let client = MockHttpClient::new().with_response(
-            MockResponse::new(StatusCode::OK)
-                .body(r#"{"models":[{"name":"llama2"},{"name":"codellama"}]}"#),
-        );
+        let client = MockHttpClient::new()
+            .with_response(
+                MockResponse::new(StatusCode::OK)
+                    .body(r#"{"models":[{"name":"llama2"},{"name":"codellama"}]}"#),
+            )
+            // /api/show for llama2
+            .with_response(MockResponse::new(StatusCode::OK).body(r#"{"capabilities":[]}"#))
+            // /api/show for codellama
+            .with_response(MockResponse::new(StatusCode::OK).body(r#"{"capabilities":[]}"#));
 
         let provider = OllamaProvider::new(client);
         let models = provider.list_models().await.unwrap();
 
         assert_eq!(models.len(), 2);
         assert_eq!(models[0].id, "llama2");
+        assert!(models[0].thinking.is_none());
         assert_eq!(models[1].id, "codellama");
+        assert!(models[1].thinking.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_list_models_with_thinking_model() {
+        let client = MockHttpClient::new()
+            .with_response(
+                MockResponse::new(StatusCode::OK)
+                    .body(r#"{"models":[{"name":"deepseek-r1:7b"},{"name":"llama2"}]}"#),
+            )
+            // /api/show for deepseek-r1:7b — has thinking capability
+            .with_response(
+                MockResponse::new(StatusCode::OK)
+                    .body(r#"{"capabilities":["completion","thinking"]}"#),
+            )
+            // /api/show for llama2 — no thinking
+            .with_response(MockResponse::new(StatusCode::OK).body(r#"{"capabilities":["completion"]}"#));
+
+        let provider = OllamaProvider::new(client);
+        let models = provider.list_models().await.unwrap();
+
+        assert_eq!(models.len(), 2);
+        assert!(models[0].thinking.is_some());
+        assert_eq!(models[0].thinking.as_ref().unwrap().modes, vec!["enabled"]);
+        assert!(models[1].thinking.is_none());
     }
 
     #[tokio::test]
@@ -148,5 +216,23 @@ mod tests {
 
         let request = client.last_request().unwrap();
         assert_eq!(request.uri(), "http://localhost:11434/api/tags");
+    }
+
+    #[tokio::test]
+    async fn test_list_models_show_failure_graceful() {
+        // If /api/show fails, thinking should be None (not an error)
+        let client = MockHttpClient::new()
+            .with_response(
+                MockResponse::new(StatusCode::OK)
+                    .body(r#"{"models":[{"name":"llama2"}]}"#),
+            )
+            // /api/show returns error
+            .with_response(MockResponse::new(StatusCode::INTERNAL_SERVER_ERROR).body("error"));
+
+        let provider = OllamaProvider::new(client);
+        let models = provider.list_models().await.unwrap();
+
+        assert_eq!(models.len(), 1);
+        assert!(models[0].thinking.is_none());
     }
 }
