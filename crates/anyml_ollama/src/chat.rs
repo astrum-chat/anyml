@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use anyhttp::HttpClient;
 use anyml_core::providers::chat::{
-    ChatChunk, ChatError, ChatOptions, ChatProvider, ChatResponse, ChatStreamError,
+    ChatChunk, ChatError, ChatOptions, ChatProvider, ChatResponse, ChatStreamError, Thinking,
 };
 use anyml_macros::json_string;
 use bytes::Bytes;
@@ -16,13 +16,25 @@ impl<C: HttpClient> ChatProvider for OllamaProvider<C> {
     async fn chat(&self, options: &ChatOptions<'_>) -> Result<ChatResponse, ChatError> {
         let messages_json = options.messages.to_json();
 
-        let body: String = json_string! {
-            "model": options.model,
-            "messages": @raw messages_json,
-            "stream": options.stream,
-            if options.thinking.is_some() {
+        let body: String = match &options.thinking {
+            // GPT-OSS requires think to be a string level, not a boolean.
+            Some(Thinking::Effort(level)) => json_string! {
+                "model": options.model,
+                "messages": @raw messages_json,
+                "stream": options.stream,
+                "think": level
+            },
+            Some(_) => json_string! {
+                "model": options.model,
+                "messages": @raw messages_json,
+                "stream": options.stream,
                 "think": true
-            }
+            },
+            None => json_string! {
+                "model": options.model,
+                "messages": @raw messages_json,
+                "stream": options.stream
+            },
         };
 
         let request = Request::post(format!("{}/api/chat", self.url))
@@ -48,13 +60,11 @@ impl<C: HttpClient> ChatProvider for OllamaProvider<C> {
 
         let stream = response.bytes_stream();
 
-        // When thinking is enabled, Ollama returns thinking in a separate `thinking` field.
-        // We also fall back to parsing <think>...</think> tags from content for older
-        // Ollama versions or models that embed tags inline.
+        let thinking_enabled = options.thinking.is_some();
         Ok(ChatResponse::new(
             stream
-                .scan(false, |in_thinking, chunk| {
-                    let chunks = parse_chunk(&chunk, in_thinking);
+                .scan(false, move |in_thinking, chunk| {
+                    let chunks = parse_chunk(&chunk, in_thinking, thinking_enabled);
                     futures::future::ready(Some(chunks))
                 })
                 .flat_map(futures::stream::iter),
@@ -65,6 +75,7 @@ impl<C: HttpClient> ChatProvider for OllamaProvider<C> {
 fn parse_chunk(
     chunk: &Result<bytes::Bytes, anyhow::Error>,
     in_thinking: &mut bool,
+    thinking_enabled: bool,
 ) -> Vec<Result<ChatChunk, ChatStreamError>> {
     let chunk = match chunk {
         Ok(chunk) => chunk,
@@ -75,6 +86,14 @@ fn parse_chunk(
         Ok(r) => r,
         Err(e) => return vec![Err(ChatStreamError::ParseError(anyhow::Error::new(e)))],
     };
+
+    // When thinking is not enabled, pass content through without parsing.
+    if !thinking_enabled {
+        if !response.message.content.is_empty() {
+            return vec![Ok(ChatChunk::Content(response.message.content))];
+        }
+        return vec![];
+    }
 
     let mut results = Vec::new();
 
