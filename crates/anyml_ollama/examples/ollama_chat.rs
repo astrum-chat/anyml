@@ -4,7 +4,7 @@ use anyml_core::{
 };
 use anyml_ollama::OllamaProvider;
 
-const MODEL: &str = "qwen2.5:1.5b";
+const MODEL: &str = "deepseek-r1:8b";
 const STREAM_RESPONSE: bool = true;
 
 struct Config {
@@ -20,7 +20,9 @@ async fn main() -> anyhow::Result<()> {
     let provider = &config.chat_provider;
 
     let messages = &[Message::user("Write me a short poem!")];
-    let options = ChatOptions::new(&MODEL).messages(messages);
+    let options = ChatOptions::new(&MODEL)
+        .thinking(anyml_core::Thinking::Enabled)
+        .messages(messages);
 
     let response = provider.chat(&options).await.map_err(anyhow::Error::new)?;
 
@@ -37,11 +39,29 @@ async fn main() -> anyhow::Result<()> {
 async fn stream_response(mut response: ChatResponse<'_>) {
     use tokio::io::{AsyncWriteExt, stdout};
 
+    let mut last_chunk = "content";
+
     let mut out = stdout();
     while let Some(Ok(chunk)) = response.next().await {
-        if let ChatChunk::Content(text) = chunk {
-            out.write_all(text.as_bytes()).await.unwrap();
-            out.flush().await.unwrap();
+        match chunk {
+            ChatChunk::Thinking(text) => {
+                if last_chunk == "content" {
+                    out.write_all("thinking:\n".as_bytes()).await.unwrap();
+                    out.flush().await.unwrap();
+                    last_chunk = "thinking";
+                }
+
+                out.write_all(text.as_bytes()).await.unwrap();
+                out.flush().await.unwrap();
+            }
+            ChatChunk::Content(text) => {
+                if last_chunk == "thinking" {
+                    last_chunk = "content";
+                }
+
+                out.write_all(text.as_bytes()).await.unwrap();
+                out.flush().await.unwrap();
+            }
         }
     }
 }
