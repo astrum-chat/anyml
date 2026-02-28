@@ -1,3 +1,4 @@
+use enum_kinds::EnumKind;
 use futures::{Stream, StreamExt};
 use serde_json::value::RawValue;
 use std::{
@@ -183,7 +184,8 @@ impl<'a> DerefMut for ChatResponse<'a> {
 
 impl<'a> Unpin for ChatResponse<'a> {}
 
-#[derive(Debug)]
+#[derive(Debug, EnumKind)]
+#[enum_kind(ChatChunkKind)]
 pub enum ChatChunk {
     Content(String),
     Thinking(String),

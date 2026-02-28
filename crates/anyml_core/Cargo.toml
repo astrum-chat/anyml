@@ -14,3 +14,4 @@ futures = "0.3.31"
 thiserror = "2.0.17"
 anyhow = "1.0.100"
 phf = { version = "0.13.1", features = ["macros"] }
+enum-kinds = "0.5.1"

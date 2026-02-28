@@ -1,6 +1,6 @@
 use anyml_core::{
     Message,
-    providers::chat::{ChatChunk, ChatOptions, ChatProvider, ChatResponse},
+    providers::chat::{ChatChunk, ChatChunkKind, ChatOptions, ChatProvider, ChatResponse},
 };
 use anyml_ollama::OllamaProvider;
 
@@ -39,24 +39,24 @@ async fn main() -> anyhow::Result<()> {
 async fn stream_response(mut response: ChatResponse<'_>) {
     use tokio::io::{AsyncWriteExt, stdout};
 
-    let mut last_chunk = "content";
+    let mut last_chunk_kind = ChatChunkKind::Content;
 
     let mut out = stdout();
     while let Some(Ok(chunk)) = response.next().await {
         match chunk {
             ChatChunk::Thinking(text) => {
-                if last_chunk == "content" {
+                if last_chunk_kind == ChatChunkKind::Content {
                     out.write_all("thinking:\n".as_bytes()).await.unwrap();
                     out.flush().await.unwrap();
-                    last_chunk = "thinking";
+                    last_chunk_kind = ChatChunkKind::Thinking;
                 }
 
                 out.write_all(text.as_bytes()).await.unwrap();
                 out.flush().await.unwrap();
             }
             ChatChunk::Content(text) => {
-                if last_chunk == "thinking" {
-                    last_chunk = "content";
+                if last_chunk_kind == ChatChunkKind::Thinking {
+                    last_chunk_kind = ChatChunkKind::Content;
                 }
 
                 out.write_all(text.as_bytes()).await.unwrap();
