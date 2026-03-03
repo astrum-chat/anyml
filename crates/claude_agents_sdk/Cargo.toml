@@ -1,0 +1,14 @@
+[package]
+name = "claude_agents_sdk"
+version = "0.0.0"
+edition = "2024"
+description = "Async-runtime-agnostic Rust wrapper for the Claude Code CLI."
+license = "MIT"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+futures = "0.3"
+anyhow = "1.0"
+thiserror = "2.0"
+which = "7"

@@ -36,7 +36,8 @@ members = [
     "crates/anyml_anthropic",
     "crates/anyml_openai",
     "crates/anyml_core",
-    "crates/anyml_macros"
+    "crates/anyml_macros",
+    "crates/claude_agents_sdk"
 ]
 
 [workspace.dependencies]
