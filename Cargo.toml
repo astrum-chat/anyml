@@ -26,7 +26,7 @@ anyhow = "1.0.100"
 
 [features]
 default = []
-full = ["anthropic", "ollama", "openai", "claude_sdk"]
+full = ["anthropic", "ollama", "openai", "claude"]
 anthropic = ["dep:anyml_anthropic"]
 ollama = ["dep:anyml_ollama"]
 openai = ["dep:anyml_openai"]
