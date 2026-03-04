@@ -55,10 +55,7 @@ pub fn create_session(
     let mut file =
         fs::File::create(&session_file).map_err(|e| AgentError::Io(anyhow::anyhow!(e)))?;
 
-    let cwd = std::env::current_dir()
-        .unwrap_or_else(|_| PathBuf::from("/tmp"))
-        .to_string_lossy()
-        .to_string();
+    let cwd = "/tmp";
     let now = Utc::now();
     let mut parent_uuid: Option<String> = None;
 

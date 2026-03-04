@@ -19,8 +19,6 @@ impl ChatProvider for ClaudeSdkProvider {
     async fn chat(&self, options: &ChatOptions<'_>) -> Result<ChatResponse, ChatError> {
         let (messages, system_prompt) = convert_messages(&options.messages)?;
 
-        let cwd = std::env::current_dir().ok();
-
         // When there is conversation history (more than just the last user
         // message), write a temp .jsonl session file so the CLI can resume
         // with full context via `--resume <path.jsonl>`.
@@ -42,7 +40,7 @@ impl ChatProvider for ClaudeSdkProvider {
             _ => None,
         };
 
-        let mut query_options = QueryOptions {
+        let query_options = QueryOptions {
             model: Some(options.model.to_owned()),
             system_prompt,
             session_id,
@@ -53,10 +51,6 @@ impl ChatProvider for ClaudeSdkProvider {
             }),
             ..Default::default()
         };
-
-        if let Some(cwd) = cwd {
-            query_options.cwd = Some(cwd);
-        }
 
         let (stream, handle) = self
             .sdk
