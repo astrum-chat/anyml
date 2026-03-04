@@ -26,11 +26,11 @@ anyhow = "1.0.100"
 
 [features]
 default = []
-full = ["anthropic", "ollama", "openai", "claude"]
+full = ["anthropic", "ollama", "openai", "claude_sdk"]
 anthropic = ["dep:anyml_anthropic"]
 ollama = ["dep:anyml_ollama"]
 openai = ["dep:anyml_openai"]
-claude = ["dep:anyml_claude_sdk"]
+claude_sdk = ["dep:anyml_claude_sdk"]
 
 [workspace]
 members = [

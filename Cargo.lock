@@ -43,11 +43,11 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "anyhttp",
- "anyml_anthropic",
- "anyml_claude_sdk",
- "anyml_core",
- "anyml_ollama",
- "anyml_openai",
+ "anyml_anthropic 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_claude_sdk 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_ollama 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_openai 0.0.0 (git+https://github.com/astrum-chat/anyml)",
  "dotenvy",
  "reqwest",
  "tokio",
@@ -59,8 +59,8 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "anyhttp",
- "anyml_core",
- "anyml_macros",
+ "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_macros 0.0.0 (git+https://github.com/astrum-chat/anyml)",
  "async-trait",
  "bytes",
  "dotenvy",
@@ -77,13 +77,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyml_anthropic"
+version = "0.0.0"
+source = "git+https://github.com/astrum-chat/anyml#972da0f55d87c6e473fa3ebe7e80f52043508240"
+dependencies = [
+ "anyhow",
+ "anyhttp",
+ "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_macros 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "async-trait",
+ "bytes",
+ "futures",
+ "http",
+ "itertools",
+ "phf",
+ "secrecy",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "anyml_claude_sdk"
 version = "0.0.0"
 dependencies = [
  "anyhow",
- "anyml_core",
+ "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
  "async-trait",
- "claude_sdk",
+ "claude_sdk 0.0.0 (git+https://github.com/astrum-chat/anyml)",
  "dotenvy",
  "futures",
  "secrecy",
@@ -94,8 +115,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyml_claude_sdk"
+version = "0.0.0"
+source = "git+https://github.com/astrum-chat/anyml#972da0f55d87c6e473fa3ebe7e80f52043508240"
+dependencies = [
+ "anyhow",
+ "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "async-trait",
+ "claude_sdk 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "futures",
+ "secrecy",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "anyml_core"
 version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "enum-kinds",
+ "futures",
+ "phf",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "anyml_core"
+version = "0.0.0"
+source = "git+https://github.com/astrum-chat/anyml#972da0f55d87c6e473fa3ebe7e80f52043508240"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -117,13 +168,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyml_macros"
+version = "0.0.0"
+source = "git+https://github.com/astrum-chat/anyml#972da0f55d87c6e473fa3ebe7e80f52043508240"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
 name = "anyml_ollama"
 version = "0.0.0"
 dependencies = [
  "anyhow",
  "anyhttp",
- "anyml_core",
- "anyml_macros",
+ "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_macros 0.0.0 (git+https://github.com/astrum-chat/anyml)",
  "async-trait",
  "bytes",
  "futures",
@@ -135,13 +196,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyml_ollama"
+version = "0.0.0"
+source = "git+https://github.com/astrum-chat/anyml#972da0f55d87c6e473fa3ebe7e80f52043508240"
+dependencies = [
+ "anyhow",
+ "anyhttp",
+ "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_macros 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "async-trait",
+ "bytes",
+ "futures",
+ "http",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "anyml_openai"
 version = "0.0.0"
 dependencies = [
  "anyhow",
  "anyhttp",
- "anyml_core",
- "anyml_macros",
+ "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_macros 0.0.0 (git+https://github.com/astrum-chat/anyml)",
  "async-trait",
  "bytes",
  "dotenvy",
@@ -154,6 +232,26 @@ dependencies = [
  "serde_json",
  "smallvec",
  "tokio",
+]
+
+[[package]]
+name = "anyml_openai"
+version = "0.0.0"
+source = "git+https://github.com/astrum-chat/anyml#972da0f55d87c6e473fa3ebe7e80f52043508240"
+dependencies = [
+ "anyhow",
+ "anyhttp",
+ "anyml_core 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "anyml_macros 0.0.0 (git+https://github.com/astrum-chat/anyml)",
+ "async-trait",
+ "bytes",
+ "futures",
+ "http",
+ "phf",
+ "secrecy",
+ "serde",
+ "serde_json",
+ "smallvec",
 ]
 
 [[package]]
@@ -254,6 +352,23 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
+ "thiserror",
+ "ureq",
+ "uuid",
+]
+
+[[package]]
+name = "claude_sdk"
+version = "0.0.0"
+source = "git+https://github.com/astrum-chat/anyml#972da0f55d87c6e473fa3ebe7e80f52043508240"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "futures",
+ "secrecy",
+ "serde",
+ "serde_json",
+ "sha2",
  "thiserror",
  "ureq",
  "uuid",

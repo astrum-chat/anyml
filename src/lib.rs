@@ -9,5 +9,5 @@ pub use anyml_ollama::*;
 #[cfg(feature = "openai")]
 pub use anyml_openai::*;
 
-#[cfg(feature = "claude")]
+#[cfg(feature = "claude_sdk")]
 pub use anyml_claude_sdk::*;
