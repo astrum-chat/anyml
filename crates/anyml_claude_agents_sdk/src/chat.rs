@@ -8,7 +8,7 @@ use anyml_core::providers::chat::{
 };
 use claude_agents_sdk::{
     AgentError, AgentHandle, AgentMessage, Message, QueryOptions, Role, StreamDelta, StreamEvent,
-    ThinkingConfig, create_session, normalize_session_id,
+    ThinkingConfig, create_session,
 };
 use futures::{Stream, StreamExt};
 
@@ -21,25 +21,20 @@ impl ChatProvider for ClaudeAgentsProvider {
 
         let cwd = std::env::current_dir().ok();
 
-        // When a session_id is provided and there is conversation history
-        // (more than just the last user message), write a session file so
-        // the CLI can resume with full context.
-        // Normalize the session ID to a valid UUID (the CLI requires UUID format).
-        // Only resume a session when there's actual history to restore.
-        // On the first message, no session file exists yet so --resume would fail.
+        // When there is conversation history (more than just the last user
+        // message), write a temp .jsonl session file so the CLI can resume
+        // with full context via `--resume <path.jsonl>`.
         let session_id = match options.session_id {
             Some(sid) if messages.len() > 1 => {
-                let normalized = normalize_session_id(sid);
-                let project_path = cwd.as_deref().unwrap_or_else(|| std::path::Path::new("/tmp"));
                 let last_user_idx = messages
                     .iter()
                     .rposition(|m| m.role == Role::User)
                     .unwrap_or(messages.len() - 1);
                 let history = &messages[..last_user_idx];
                 if !history.is_empty() {
-                    create_session(project_path, history, Some(&normalized))
+                    let path = create_session(history, Some(sid))
                         .map_err(|e| ChatError::RequestError(anyhow!(e)))?;
-                    Some(normalized)
+                    Some(path)
                 } else {
                     None
                 }

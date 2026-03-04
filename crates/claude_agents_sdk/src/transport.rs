@@ -51,13 +51,22 @@ pub fn spawn_agent(
     messages: &[Message],
     options: &QueryOptions,
     api_key: Option<&SecretString>,
+    runtime: Option<&Path>,
 ) -> Result<(impl Stream<Item = Result<AgentMessage, AgentError>> + use<>, AgentHandle), AgentError>
 {
     if !messages.iter().any(|m| m.role == Role::User) {
         return Err(AgentError::NoUserMessage);
     }
 
-    let mut cmd = Command::new(cli_path);
+    // When a runtime is specified (e.g. bun), run `<runtime> <cli_path>`
+    // instead of relying on the script's shebang.
+    let mut cmd = if let Some(rt) = runtime {
+        let mut c = Command::new(rt);
+        c.arg(cli_path);
+        c
+    } else {
+        Command::new(cli_path)
+    };
 
     // Run in simple mode — disables CLAUDE.md, MCP tools, hooks, and project
     // context so the CLI behaves as a pure LLM proxy.
@@ -88,11 +97,9 @@ pub fn spawn_agent(
         .arg("--tools")
         .arg("");
 
-    // Only allow session persistence when we're explicitly resuming a session.
-    // Without this flag the CLI creates its own session state which can conflict.
-    if options.session_id.is_none() {
-        cmd.arg("--no-session-persistence");
-    }
+    // We manage conversation history ourselves (via temp .jsonl files),
+    // so always disable the CLI's own session persistence.
+    cmd.arg("--no-session-persistence");
 
     if let Some(model) = &options.model {
         cmd.arg("--model").arg(model);

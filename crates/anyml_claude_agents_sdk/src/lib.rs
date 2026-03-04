@@ -20,4 +20,10 @@ impl ClaudeAgentsProvider {
         self.sdk = self.sdk.api_key(key);
         self
     }
+
+    /// Set a JS runtime (e.g. `bun`) to execute the CLI with instead of node.
+    pub fn runtime(mut self, runtime: impl Into<PathBuf>) -> Self {
+        self.sdk = self.sdk.runtime(runtime);
+        self
+    }
 }
