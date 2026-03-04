@@ -1,13 +1,21 @@
+mod install;
+pub mod session;
 mod transport;
 pub mod types;
 
 use std::path::PathBuf;
 
 use futures::Stream;
+use secrecy::SecretString;
 use thiserror::Error;
 
+pub use install::install_cli;
+pub use session::{create_session, normalize_session_id, session_dir};
 pub use transport::AgentHandle;
-pub use types::{AgentMessage, ContentBlock, Message, QueryOptions, Role};
+pub use types::{
+    AgentMessage, ContentBlock, Message, QueryOptions, Role, StreamDelta, StreamEvent,
+    ThinkingConfig,
+};
 
 /// Errors that can occur when using the Claude Agent SDK.
 #[derive(Debug, Error)]
@@ -23,6 +31,18 @@ pub enum AgentError {
 
     #[error("No user message found in conversation history")]
     NoUserMessage,
+
+    #[error("Failed to download Claude CLI")]
+    DownloadFailed(#[source] anyhow::Error),
+
+    #[error("Unsupported platform")]
+    UnsupportedPlatform,
+
+    #[error("Checksum verification failed")]
+    ChecksumMismatch,
+
+    #[error("Invalid file extension for CLI binary")]
+    InvalidExtension,
 }
 
 /// Client for the Claude Code CLI.
@@ -30,21 +50,23 @@ pub enum AgentError {
 /// Spawns the CLI as a subprocess and streams back NDJSON messages.
 /// Async-runtime-agnostic — uses `std::thread` + `futures::channel::mpsc`.
 pub struct ClaudeAgentSDK {
-    cli_path: Option<PathBuf>,
+    cli_path: PathBuf,
+    api_key: Option<SecretString>,
 }
 
 impl ClaudeAgentSDK {
-    /// Create a new SDK instance.
-    ///
-    /// By default, the `claude` binary is resolved from `PATH` at query time.
-    /// Use [`.cli_path()`] to override.
-    pub fn new() -> Self {
-        Self { cli_path: None }
+    /// Create a new SDK instance with the given CLI binary path.
+    pub fn new(cli_path: impl Into<PathBuf>) -> Self {
+        Self {
+            cli_path: cli_path.into(),
+            api_key: None,
+        }
     }
 
-    /// Set a custom path to the Claude CLI binary.
-    pub fn cli_path(mut self, path: impl Into<PathBuf>) -> Self {
-        self.cli_path = Some(path.into());
+    /// Set the Anthropic API key. When set, this is passed to the CLI
+    /// subprocess via the `ANTHROPIC_API_KEY` environment variable.
+    pub fn api_key(mut self, key: SecretString) -> Self {
+        self.api_key = Some(key);
         self
     }
 
@@ -57,22 +79,12 @@ impl ClaudeAgentSDK {
         &self,
         messages: &[Message],
         options: &QueryOptions,
-    ) -> Result<(impl Stream<Item = Result<AgentMessage, AgentError>>, AgentHandle), AgentError>
+    ) -> Result<(impl Stream<Item = Result<AgentMessage, AgentError>> + use<>, AgentHandle), AgentError>
     {
-        let cli = self.resolve_cli()?;
-        transport::spawn_agent(cli, messages, options)
-    }
-
-    fn resolve_cli(&self) -> Result<PathBuf, AgentError> {
-        match &self.cli_path {
-            Some(path) => Ok(path.clone()),
-            None => which::which("claude").map_err(|e| AgentError::CliNotFound(anyhow::anyhow!(e))),
+        if !self.cli_path.exists() {
+            install::install_cli(&self.cli_path)?;
         }
+        transport::spawn_agent(&self.cli_path, messages, options, self.api_key.as_ref())
     }
 }
 
-impl Default for ClaudeAgentSDK {
-    fn default() -> Self {
-        Self::new()
-    }
-}

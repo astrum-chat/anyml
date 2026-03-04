@@ -11,6 +11,7 @@ anyml_core.workspace = true
 anyml_anthropic = { workspace = true, optional = true }
 anyml_ollama = { workspace = true, optional = true }
 anyml_openai = { workspace = true, optional = true }
+anyml_claude_agents_sdk = { workspace = true, optional = true }
 
 [[example]]
 name = "example"
@@ -25,10 +26,11 @@ anyhow = "1.0.100"
 
 [features]
 default = []
-full = ["anthropic", "ollama", "openai"]
+full = ["anthropic", "ollama", "openai", "claude_agents"]
 anthropic = ["dep:anyml_anthropic"]
 ollama = ["dep:anyml_ollama"]
 openai = ["dep:anyml_openai"]
+claude_agents = ["dep:anyml_claude_agents_sdk"]
 
 [workspace]
 members = [
@@ -37,22 +39,27 @@ members = [
     "crates/anyml_openai",
     "crates/anyml_core",
     "crates/anyml_macros",
-    "crates/claude_agents_sdk"
+    "crates/claude_agents_sdk",
+    "crates/anyml_claude_agents_sdk"
 ]
 
 [workspace.dependencies]
 # Remote:
-anyml_core = { git = "https://github.com/astrum-chat/anyml" }
-anyml_macros = { git = "https://github.com/astrum-chat/anyml" }
-anyml_anthropic = { git = "https://github.com/astrum-chat/anyml" }
-anyml_ollama = { git = "https://github.com/astrum-chat/anyml" }
-anyml_openai = { git = "https://github.com/astrum-chat/anyml" }
+# anyml_core = { git = "https://github.com/astrum-chat/anyml" }
+# anyml_macros = { git = "https://github.com/astrum-chat/anyml" }
+# anyml_anthropic = { git = "https://github.com/astrum-chat/anyml" }
+# anyml_ollama = { git = "https://github.com/astrum-chat/anyml" }
+# anyml_openai = { git = "https://github.com/astrum-chat/anyml" }
+# anyml_claude_agents_sdk = { git = "https://github.com/astrum-chat/anyml" }
+# claude_agents_sdk = { git = "https://github.com/astrum-chat/anyml" }
 # Local:
-# anyml_core = { path = "./crates/anyml_core" }
-# anyml_macros = { path = "./crates/anyml_macros" }
-# anyml_anthropic = { path = "./crates/anyml_anthropic" }
-# anyml_ollama = { path = "./crates/anyml_ollama" }
-# anyml_openai = { path = "./crates/anyml_openai" }
+anyml_core = { path = "./crates/anyml_core" }
+anyml_macros = { path = "./crates/anyml_macros" }
+anyml_anthropic = { path = "./crates/anyml_anthropic" }
+anyml_ollama = { path = "./crates/anyml_ollama" }
+anyml_openai = { path = "./crates/anyml_openai" }
+anyml_claude_agents_sdk = { path = "./crates/anyml_claude_agents_sdk" }
+claude_agents_sdk = { path = "./crates/claude_agents_sdk" }
 
 [patch.crates-io]
 anyhttp = { git = "https://github.com/quaero-search/anyhttp" }

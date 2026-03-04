@@ -21,6 +21,7 @@ pub struct ChatOptions<'a> {
     pub stream: bool,
     pub max_tokens: usize,
     pub thinking: Option<Thinking>,
+    pub session_id: Option<&'a str>,
 }
 
 impl<'a> ChatOptions<'a> {
@@ -31,6 +32,7 @@ impl<'a> ChatOptions<'a> {
             stream: true,
             max_tokens: 4096,
             thinking: None,
+            session_id: None,
         }
     }
 
@@ -68,6 +70,12 @@ impl<'a> ChatOptions<'a> {
     /// Enables thinking/reasoning for models that support it.
     pub fn thinking(mut self, thinking: Thinking) -> Self {
         self.thinking = Some(thinking);
+        self
+    }
+
+    /// Sets the session ID for multi-turn conversation support.
+    pub fn session_id(mut self, session_id: &'a str) -> Self {
+        self.session_id = Some(session_id);
         self
     }
 }

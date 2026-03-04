@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// A message received from the Claude Code CLI via NDJSON stdout.
 #[derive(Debug, Deserialize)]
@@ -20,6 +20,10 @@ pub enum AgentMessage {
         #[serde(default)]
         is_error: bool,
     },
+
+    /// Streaming event emitted when `--include-partial-messages` is enabled.
+    #[serde(rename = "stream_event")]
+    StreamEvent { event: StreamEvent },
 }
 
 #[derive(Debug, Deserialize)]
@@ -38,18 +42,58 @@ pub enum ContentBlock {
     Thinking { thinking: String },
 }
 
+/// A streaming event from the Claude API, forwarded by the CLI.
+#[derive(Debug, Deserialize)]
+#[serde(tag = "type")]
+pub enum StreamEvent {
+    #[serde(rename = "content_block_delta")]
+    ContentBlockDelta { delta: StreamDelta },
+
+    /// Other event types we don't need to act on.
+    #[serde(other)]
+    Other,
+}
+
+/// A delta within a `content_block_delta` stream event.
+#[derive(Debug, Deserialize)]
+#[serde(tag = "type")]
+pub enum StreamDelta {
+    #[serde(rename = "text_delta")]
+    Text { text: String },
+
+    #[serde(rename = "thinking_delta")]
+    Thinking { thinking: String },
+
+    #[serde(other)]
+    Other,
+}
+
 /// An input message in the conversation history.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Message {
     pub role: Role,
     pub content: String,
 }
 
 /// The role of a message in the conversation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Role {
     User,
     Assistant,
+}
+
+/// Thinking configuration for the Claude Code CLI.
+#[derive(Debug, Clone)]
+pub enum ThinkingConfig {
+    /// Set a token budget for extended thinking.
+    /// Passed via the `MAX_THINKING_TOKENS` env var.
+    BudgetTokens(usize),
+    /// Set a named effort level (e.g. "low", "medium", "high", "max").
+    Effort(String),
+    /// Disable thinking entirely.
+    /// Sets `MAX_THINKING_TOKENS=0`.
+    Disabled,
 }
 
 /// Per-query configuration options.
@@ -59,6 +103,10 @@ pub struct QueryOptions {
     pub max_turns: Option<u32>,
     pub system_prompt: Option<String>,
     pub cwd: Option<std::path::PathBuf>,
+    pub thinking: Option<ThinkingConfig>,
+    /// Resume an existing session by ID. When set, the CLI loads
+    /// prior conversation turns from the session file on disk.
+    pub session_id: Option<String>,
 }
 
 #[cfg(test)]

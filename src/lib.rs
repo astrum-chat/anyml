@@ -8,3 +8,6 @@ pub use anyml_ollama::*;
 
 #[cfg(feature = "openai")]
 pub use anyml_openai::*;
+
+#[cfg(feature = "claude_agents")]
+pub use anyml_claude_agents_sdk::*;
