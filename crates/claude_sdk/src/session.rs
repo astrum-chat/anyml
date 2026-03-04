@@ -1,6 +1,6 @@
 use std::fs;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use chrono::Utc;
 use serde_json::json;
@@ -43,12 +43,13 @@ pub fn normalize_session_id(id: &str) -> String {
 pub fn create_session(
     messages: &[Message],
     id: Option<&str>,
+    cli_path: &Path,
 ) -> Result<String, AgentError> {
     let session_id = id
         .map(|s| normalize_session_id(s))
         .unwrap_or_else(|| Uuid::new_v4().to_string());
 
-    let dir = session_dir();
+    let dir = session_dir(cli_path);
     fs::create_dir_all(&dir).map_err(|e| AgentError::Io(anyhow::anyhow!(e)))?;
 
     let session_file = dir.join(format!("{session_id}.jsonl"));
@@ -95,9 +96,11 @@ pub fn create_session(
     Ok(session_file.to_string_lossy().to_string())
 }
 
-/// Returns the temp directory used to store session files.
-fn session_dir() -> PathBuf {
-    std::env::temp_dir().join("claude_sessions")
+/// Returns the directory used to store session files, located next to the
+/// Claude CLI binary.
+fn session_dir(cli_path: &Path) -> PathBuf {
+    let parent = cli_path.parent().unwrap_or(Path::new("."));
+    parent.join("claude_sessions")
 }
 
 #[cfg(test)]
@@ -131,7 +134,7 @@ mod tests {
             Message { role: Role::Assistant, content: "hi there".into() },
         ];
 
-        let path = create_session(&messages, None).unwrap();
+        let path = create_session(&messages, None, Path::new("/tmp/claude")).unwrap();
         assert!(path.ends_with(".jsonl"));
         assert!(std::path::Path::new(&path).exists());
 
@@ -160,8 +163,8 @@ mod tests {
     fn test_create_session_deterministic_path_with_id() {
         let messages = vec![Message { role: Role::User, content: "test".into() }];
 
-        let path1 = create_session(&messages, Some("my-session")).unwrap();
-        let path2 = create_session(&messages, Some("my-session")).unwrap();
+        let path1 = create_session(&messages, Some("my-session"), Path::new("/tmp/claude")).unwrap();
+        let path2 = create_session(&messages, Some("my-session"), Path::new("/tmp/claude")).unwrap();
         // Same id produces the same file path (deterministic UUID v5)
         assert_eq!(path1, path2);
 

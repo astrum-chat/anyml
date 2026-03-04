@@ -9,7 +9,7 @@ use futures::Stream;
 use secrecy::SecretString;
 use thiserror::Error;
 
-pub use install::install_cli;
+pub use install::{default_cli_path, install_cli};
 pub use session::{create_session, normalize_session_id};
 pub use transport::AgentHandle;
 pub use types::{
@@ -61,6 +61,11 @@ impl ClaudeSDK {
             cli_path: cli_path.into(),
             api_key: None,
         }
+    }
+
+    /// Returns the CLI binary path.
+    pub fn cli_path(&self) -> &std::path::Path {
+        &self.cli_path
     }
 
     /// Set the Anthropic API key. When set, this is passed to the CLI

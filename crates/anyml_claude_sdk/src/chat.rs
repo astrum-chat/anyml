@@ -30,7 +30,7 @@ impl ChatProvider for ClaudeSdkProvider {
                     .unwrap_or(messages.len() - 1);
                 let history = &messages[..last_user_idx];
                 if !history.is_empty() {
-                    let path = create_session(history, Some(sid))
+                    let path = create_session(history, Some(sid), self.sdk.cli_path())
                         .map_err(|e| ChatError::RequestError(anyhow!(e)))?;
                     Some(path)
                 } else {
