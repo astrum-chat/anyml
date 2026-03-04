@@ -52,7 +52,6 @@ pub enum AgentError {
 pub struct ClaudeAgentSDK {
     cli_path: PathBuf,
     api_key: Option<SecretString>,
-    runtime: Option<PathBuf>,
 }
 
 impl ClaudeAgentSDK {
@@ -61,7 +60,6 @@ impl ClaudeAgentSDK {
         Self {
             cli_path: cli_path.into(),
             api_key: None,
-            runtime: None,
         }
     }
 
@@ -69,13 +67,6 @@ impl ClaudeAgentSDK {
     /// subprocess via the `ANTHROPIC_API_KEY` environment variable.
     pub fn api_key(mut self, key: SecretString) -> Self {
         self.api_key = Some(key);
-        self
-    }
-
-    /// Set a JS runtime (e.g. `bun`) to execute the CLI script with,
-    /// instead of relying on the script's shebang (node).
-    pub fn runtime(mut self, runtime: impl Into<PathBuf>) -> Self {
-        self.runtime = Some(runtime.into());
         self
     }
 
@@ -98,7 +89,6 @@ impl ClaudeAgentSDK {
             messages,
             options,
             self.api_key.as_ref(),
-            self.runtime.as_deref(),
         )
     }
 }

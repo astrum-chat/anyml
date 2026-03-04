@@ -51,22 +51,13 @@ pub fn spawn_agent(
     messages: &[Message],
     options: &QueryOptions,
     api_key: Option<&SecretString>,
-    runtime: Option<&Path>,
 ) -> Result<(impl Stream<Item = Result<AgentMessage, AgentError>> + use<>, AgentHandle), AgentError>
 {
     if !messages.iter().any(|m| m.role == Role::User) {
         return Err(AgentError::NoUserMessage);
     }
 
-    // When a runtime is specified (e.g. bun), run `<runtime> <cli_path>`
-    // instead of relying on the script's shebang.
-    let mut cmd = if let Some(rt) = runtime {
-        let mut c = Command::new(rt);
-        c.arg(cli_path);
-        c
-    } else {
-        Command::new(cli_path)
-    };
+    let mut cmd = Command::new(cli_path);
 
     // Run in simple mode — disables CLAUDE.md, MCP tools, hooks, and project
     // context so the CLI behaves as a pure LLM proxy.
