@@ -6,16 +6,16 @@ use anyml_core::providers::chat::{
     ChatChunk, ChatError, ChatOptions, ChatProvider, ChatResponse, ChatStreamError, Messages,
     Thinking,
 };
-use claude_agents_sdk::{
+use claude_sdk::{
     AgentError, AgentHandle, AgentMessage, Message, QueryOptions, Role, StreamDelta, StreamEvent,
     ThinkingConfig, create_session,
 };
 use futures::{Stream, StreamExt};
 
-use crate::ClaudeAgentsProvider;
+use crate::ClaudeSdkProvider;
 
 #[async_trait::async_trait]
-impl ChatProvider for ClaudeAgentsProvider {
+impl ChatProvider for ClaudeSdkProvider {
     async fn chat(&self, options: &ChatOptions<'_>) -> Result<ChatResponse, ChatError> {
         let (messages, system_prompt) = convert_messages(&options.messages)?;
 

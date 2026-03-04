@@ -3,16 +3,16 @@ use std::path::PathBuf;
 mod chat;
 mod list_models;
 
-pub use claude_agents_sdk::install_cli;
+pub use claude_sdk::install_cli;
 
-pub struct ClaudeAgentsProvider {
-    sdk: claude_agents_sdk::ClaudeAgentSDK,
+pub struct ClaudeSdkProvider {
+    sdk: claude_sdk::ClaudeSDK,
 }
 
-impl ClaudeAgentsProvider {
+impl ClaudeSdkProvider {
     pub fn new(cli_path: impl Into<PathBuf>) -> Self {
         Self {
-            sdk: claude_agents_sdk::ClaudeAgentSDK::new(cli_path),
+            sdk: claude_sdk::ClaudeSDK::new(cli_path),
         }
     }
 

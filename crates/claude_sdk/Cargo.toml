@@ -1,5 +1,5 @@
 [package]
-name = "claude_agents_sdk"
+name = "claude_sdk"
 version = "0.0.0"
 edition = "2024"
 description = "Async-runtime-agnostic Rust wrapper for the Claude Code CLI."

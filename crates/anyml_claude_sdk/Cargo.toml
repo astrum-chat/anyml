@@ -1,12 +1,12 @@
 [package]
-name = "anyml_claude_agents_sdk"
+name = "anyml_claude_sdk"
 version = "0.0.0"
 edition = "2024"
 license = "MIT"
 
 [dependencies]
 anyml_core.workspace = true
-claude_agents_sdk.workspace = true
+claude_sdk.workspace = true
 async-trait = "0.1"
 futures = "0.3"
 anyhow = "1.0"
@@ -20,4 +20,4 @@ dotenvy = "0.15"
 which = "7"
 
 [[example]]
-name = "claude_agents_chat"
+name = "claude_chat"

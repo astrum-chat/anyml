@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
-use claude_agents_sdk::{
-    AgentError, AgentMessage, ClaudeAgentSDK, ContentBlock, Message, QueryOptions, Role,
+use claude_sdk::{
+    AgentError, AgentMessage, ClaudeSDK, ContentBlock, Message, QueryOptions, Role,
     ThinkingConfig,
 };
 use secrecy::SecretString;
@@ -25,7 +25,7 @@ fn assistant_msg(content: &str) -> Message {
 
 #[test]
 fn stream_basic_messages() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_stream__")];
     let (stream, mut handle) = sdk.query(&messages, &QueryOptions::default()).unwrap();
 
@@ -71,7 +71,7 @@ fn stream_basic_messages() {
 
 #[test]
 fn stream_thinking_blocks() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_thinking__")];
     let (stream, mut handle) = sdk.query(&messages, &QueryOptions::default()).unwrap();
 
@@ -101,7 +101,7 @@ fn stream_thinking_blocks() {
 
 #[test]
 fn stream_skips_unknown_message_types() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_skip_unknown__")];
     let (stream, mut handle) = sdk.query(&messages, &QueryOptions::default()).unwrap();
 
@@ -126,7 +126,7 @@ fn stream_skips_unknown_message_types() {
 
 #[test]
 fn stream_skips_empty_lines() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_empty_lines__")];
     let (stream, mut handle) = sdk.query(&messages, &QueryOptions::default()).unwrap();
 
@@ -153,7 +153,7 @@ fn stream_skips_empty_lines() {
 
 #[test]
 fn query_passes_model_flag() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_echo_args__")];
     let options = QueryOptions {
         model: Some("test-model".into()),
@@ -177,7 +177,7 @@ fn query_passes_model_flag() {
 
 #[test]
 fn query_passes_max_turns_flag() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_echo_args__")];
     let options = QueryOptions {
         max_turns: Some(5),
@@ -201,7 +201,7 @@ fn query_passes_max_turns_flag() {
 
 #[test]
 fn query_passes_system_prompt_flag() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_echo_args__")];
     let options = QueryOptions {
         system_prompt: Some("Be helpful".into()),
@@ -225,7 +225,7 @@ fn query_passes_system_prompt_flag() {
 
 #[test]
 fn query_passes_api_key_env() {
-    let sdk = ClaudeAgentSDK::new(fake_cli())
+    let sdk = ClaudeSDK::new(fake_cli())
         .api_key(SecretString::from("sk-ant-api03-fake-key"));
     let messages = [user_msg("__test_echo_env__")];
     let (stream, mut handle) = sdk.query(&messages, &QueryOptions::default()).unwrap();
@@ -246,7 +246,7 @@ fn query_passes_api_key_env() {
 
 #[test]
 fn query_passes_session_token_as_oauth() {
-    let sdk = ClaudeAgentSDK::new(fake_cli())
+    let sdk = ClaudeSDK::new(fake_cli())
         .api_key(SecretString::from("sk-ant-sid01-fake-session-token"));
     let messages = [user_msg("__test_echo_env__")];
     let (stream, mut handle) = sdk.query(&messages, &QueryOptions::default()).unwrap();
@@ -270,7 +270,7 @@ fn query_passes_session_token_as_oauth() {
 
 #[test]
 fn query_passes_thinking_budget_env() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_echo_args_env__")];
     let options = QueryOptions {
         thinking: Some(ThinkingConfig::BudgetTokens(8192)),
@@ -292,7 +292,7 @@ fn query_passes_thinking_budget_env() {
 
 #[test]
 fn query_passes_thinking_effort_env() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_echo_args_env__")];
     let options = QueryOptions {
         thinking: Some(ThinkingConfig::Effort("high".into())),
@@ -314,7 +314,7 @@ fn query_passes_thinking_effort_env() {
 
 #[test]
 fn query_passes_thinking_disabled_env() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_echo_args_env__")];
     let options = QueryOptions {
         thinking: Some(ThinkingConfig::Disabled),
@@ -336,7 +336,7 @@ fn query_passes_thinking_disabled_env() {
 
 #[test]
 fn query_no_thinking_config_disables_thinking() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_echo_args_env__")];
     let options = QueryOptions::default();
     let (stream, mut handle) = sdk.query(&messages, &options).unwrap();
@@ -357,7 +357,7 @@ fn query_no_thinking_config_disables_thinking() {
 
 #[test]
 fn query_no_user_message_errors() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [assistant_msg("hi")];
     match sdk.query(&messages, &QueryOptions::default()) {
         Err(AgentError::NoUserMessage) => {}
@@ -368,7 +368,7 @@ fn query_no_user_message_errors() {
 
 #[test]
 fn query_empty_messages_errors() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages: Vec<Message> = vec![];
     match sdk.query(&messages, &QueryOptions::default()) {
         Err(AgentError::NoUserMessage) => {}
@@ -381,7 +381,7 @@ fn query_empty_messages_errors() {
 
 #[test]
 fn handle_kill_terminates_process() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_hang__")];
     let (_stream, mut handle) = sdk.query(&messages, &QueryOptions::default()).unwrap();
 
@@ -394,7 +394,7 @@ fn handle_kill_terminates_process() {
 
 #[test]
 fn handle_drop_kills_process() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_hang__")];
     let (_stream, handle) = sdk.query(&messages, &QueryOptions::default()).unwrap();
 
@@ -406,7 +406,7 @@ fn handle_drop_kills_process() {
 
 #[test]
 fn query_sends_single_message_via_stdin() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_echo_stdin__")];
     let (stream, mut handle) = sdk.query(&messages, &QueryOptions::default()).unwrap();
 
@@ -428,7 +428,7 @@ fn query_sends_single_message_via_stdin() {
 
 #[test]
 fn query_sends_only_last_user_message_via_stdin() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [
         user_msg("hello"),
         assistant_msg("hi there"),
@@ -457,7 +457,7 @@ fn query_sends_only_last_user_message_via_stdin() {
 
 #[test]
 fn query_passes_resume_flag() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_echo_args__")];
     let options = QueryOptions {
         session_id: Some("test-session-abc".into()),
@@ -481,7 +481,7 @@ fn query_passes_resume_flag() {
 
 #[test]
 fn query_no_session_id_omits_resume() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_echo_args__")];
     let options = QueryOptions::default();
     let (stream, mut handle) = sdk.query(&messages, &options).unwrap();
@@ -503,7 +503,7 @@ fn query_no_session_id_omits_resume() {
 
 #[test]
 fn query_always_passes_default_flags() {
-    let sdk = ClaudeAgentSDK::new(fake_cli());
+    let sdk = ClaudeSDK::new(fake_cli());
     let messages = [user_msg("__test_echo_args__")];
     let (stream, mut handle) = sdk.query(&messages, &QueryOptions::default()).unwrap();
 

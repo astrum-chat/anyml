@@ -1,6 +1,6 @@
 use std::env;
 
-use anyml_claude_agents_sdk::ClaudeAgentsProvider;
+use anyml_claude_sdk::ClaudeSdkProvider;
 use anyml_core::{
     Message,
     providers::chat::{ChatChunk, ChatOptions, ChatProvider, ChatResponse},
@@ -16,7 +16,7 @@ async fn main() {
 async fn chat() -> anyhow::Result<()> {
     dotenvy::from_filename(".env.test").ok();
 
-    let mut provider = ClaudeAgentsProvider::new(which_claude()?);
+    let mut provider = ClaudeSdkProvider::new(which_claude()?);
 
     // If ANTHROPIC_SESSION is set, pass it; otherwise the CLI uses its stored credentials.
     if let Ok(session_key) = env::var("ANTHROPIC_SESSION") {

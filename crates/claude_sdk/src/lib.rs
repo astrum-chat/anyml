@@ -17,7 +17,7 @@ pub use types::{
     ThinkingConfig,
 };
 
-/// Errors that can occur when using the Claude Agent SDK.
+/// Errors that can occur when using the Claude SDK.
 #[derive(Debug, Error)]
 pub enum AgentError {
     #[error("Claude CLI not found on PATH")]
@@ -49,12 +49,12 @@ pub enum AgentError {
 ///
 /// Spawns the CLI as a subprocess and streams back NDJSON messages.
 /// Async-runtime-agnostic — uses `std::thread` + `futures::channel::mpsc`.
-pub struct ClaudeAgentSDK {
+pub struct ClaudeSDK {
     cli_path: PathBuf,
     api_key: Option<SecretString>,
 }
 
-impl ClaudeAgentSDK {
+impl ClaudeSDK {
     /// Create a new SDK instance with the given CLI binary path.
     pub fn new(cli_path: impl Into<PathBuf>) -> Self {
         Self {

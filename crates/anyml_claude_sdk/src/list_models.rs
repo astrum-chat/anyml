@@ -3,7 +3,7 @@ use anyml_core::{
     providers::list_models::{ListModelsError, ListModelsProvider},
 };
 
-use crate::ClaudeAgentsProvider;
+use crate::ClaudeSdkProvider;
 
 struct StaticModel {
     id: &'static str,
@@ -95,7 +95,7 @@ const MODELS: &[StaticModel] = &[
 ];
 
 #[async_trait::async_trait]
-impl ListModelsProvider for ClaudeAgentsProvider {
+impl ListModelsProvider for ClaudeSdkProvider {
     async fn list_models(&self) -> Result<Vec<Model>, ListModelsError> {
         Ok(MODELS
             .iter()
