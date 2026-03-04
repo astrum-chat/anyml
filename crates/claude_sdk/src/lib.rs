@@ -9,7 +9,7 @@ use futures::Stream;
 use secrecy::SecretString;
 use thiserror::Error;
 
-pub use install::{default_cli_path, install_cli};
+pub use install::install_cli;
 pub use session::{create_session, normalize_session_id};
 pub use transport::AgentHandle;
 pub use types::{

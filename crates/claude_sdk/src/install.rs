@@ -8,14 +8,6 @@ use sha2::{Digest, Sha256};
 
 use crate::AgentError;
 
-/// Returns the default path for the CLI binary, located in the parent
-/// directory of the `claude_sdk` crate (i.e. the `crates/` directory).
-pub fn default_cli_path() -> PathBuf {
-    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let parent = manifest_dir.parent().unwrap_or(&manifest_dir);
-    parent.join(binary_name())
-}
-
 const GCS_BUCKET: &str = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases";
 
 #[derive(Deserialize)]

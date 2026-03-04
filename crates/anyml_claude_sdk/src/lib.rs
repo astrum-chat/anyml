@@ -3,7 +3,7 @@ use std::path::PathBuf;
 mod chat;
 mod list_models;
 
-pub use claude_sdk::{default_cli_path, install_cli};
+pub use claude_sdk::install_cli;
 
 pub struct ClaudeSdkProvider {
     sdk: claude_sdk::ClaudeSDK,

@@ -26,7 +26,7 @@ anyhow = "1.0.100"
 
 [features]
 default = []
-full = ["anthropic", "ollama", "openai", "claude"]
+full = ["anthropic", "ollama", "openai", "claude_sdk"]
 anthropic = ["dep:anyml_anthropic"]
 ollama = ["dep:anyml_ollama"]
 openai = ["dep:anyml_openai"]
@@ -45,21 +45,21 @@ members = [
 
 [workspace.dependencies]
 # Remote:
-anyml_core = { git = "https://github.com/astrum-chat/anyml" }
-anyml_macros = { git = "https://github.com/astrum-chat/anyml" }
-anyml_anthropic = { git = "https://github.com/astrum-chat/anyml" }
-anyml_ollama = { git = "https://github.com/astrum-chat/anyml" }
-anyml_openai = { git = "https://github.com/astrum-chat/anyml" }
-anyml_claude_sdk = { git = "https://github.com/astrum-chat/anyml" }
-claude_sdk = { git = "https://github.com/astrum-chat/anyml" }
+# anyml_core = { git = "https://github.com/astrum-chat/anyml" }
+# anyml_macros = { git = "https://github.com/astrum-chat/anyml" }
+# anyml_anthropic = { git = "https://github.com/astrum-chat/anyml" }
+# anyml_ollama = { git = "https://github.com/astrum-chat/anyml" }
+# anyml_openai = { git = "https://github.com/astrum-chat/anyml" }
+# anyml_claude_sdk = { git = "https://github.com/astrum-chat/anyml" }
+# claude_sdk = { git = "https://github.com/astrum-chat/anyml" }
 # Local:
-# anyml_core = { path = "./crates/anyml_core" }
-# anyml_macros = { path = "./crates/anyml_macros" }
-# anyml_anthropic = { path = "./crates/anyml_anthropic" }
-# anyml_ollama = { path = "./crates/anyml_ollama" }
-# anyml_openai = { path = "./crates/anyml_openai" }
-# anyml_claude_sdk = { path = "./crates/anyml_claude_sdk" }
-# claude_sdk = { path = "./crates/claude_sdk" }
+anyml_core = { path = "./crates/anyml_core" }
+anyml_macros = { path = "./crates/anyml_macros" }
+anyml_anthropic = { path = "./crates/anyml_anthropic" }
+anyml_ollama = { path = "./crates/anyml_ollama" }
+anyml_openai = { path = "./crates/anyml_openai" }
+anyml_claude_sdk = { path = "./crates/anyml_claude_sdk" }
+claude_sdk = { path = "./crates/claude_sdk" }
 
 [patch.crates-io]
 anyhttp = { git = "https://github.com/quaero-search/anyhttp" }
